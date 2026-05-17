@@ -1,6 +1,6 @@
-const OpenAI = require('openai');
+const Anthropic = require('@anthropic-ai/sdk');
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const generateItinerary = async (match) => {
   const { activity, participants } = match;
@@ -17,15 +17,18 @@ Return a JSON object with:
 - "stops": array of { time, place, description, duration }
 
 Keep it practical and fun for people meeting for the first time.
+Return only valid JSON, no markdown or extra text.
 `.trim();
 
-  const response = await client.chat.completions.create({
-    model: 'gpt-4o-mini',
+  const response = await client.messages.create({
+    model: 'claude-opus-4-7',
+    max_tokens: 1024,
+    thinking: { type: 'adaptive' },
     messages: [{ role: 'user', content: prompt }],
-    response_format: { type: 'json_object' },
   });
 
-  return JSON.parse(response.choices[0].message.content);
+  const text = response.content.find((block) => block.type === 'text').text;
+  return JSON.parse(text);
 };
 
 module.exports = { generateItinerary };

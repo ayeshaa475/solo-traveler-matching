@@ -3,11 +3,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const styles = {
-  nav: { background: '#4f46e5', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56 },
-  brand: { color: '#fff', fontWeight: 700, fontSize: 18 },
+  nav: { background: '#fff', borderBottom: '1px solid #ede5df', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56 },
+  brand: { color: '#1a1208', fontWeight: 700, fontSize: 18 },
   links: { display: 'flex', gap: 20, alignItems: 'center' },
-  link: { color: 'rgba(255,255,255,0.85)', fontSize: 14, fontWeight: 500 },
-  btn: { background: 'rgba(255,255,255,0.15)', color: '#fff', padding: '6px 14px', fontSize: 13 },
+  link: { color: '#6b5e52', fontSize: 14, fontWeight: 500 },
+  btn: { background: '#0d9488', color: '#fff', padding: '6px 14px', fontSize: 13, borderRadius: 6, border: 'none', cursor: 'pointer' },
 };
 
 export default function Navbar() {
@@ -18,7 +18,7 @@ export default function Navbar() {
 
   return (
     <nav style={styles.nav}>
-      <Link to="/" style={styles.brand}>Solo Traveler Matching</Link>
+      <Link to="/" style={styles.brand}>Detour</Link>
       <div style={styles.links}>
         {user ? (
           <>
