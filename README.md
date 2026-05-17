@@ -1,15 +1,11 @@
 # Solo Traveler Matching
 
-Solo travelers in the same city post what they want to do. The app matches them with other travelers based on activity type and timing, then generates a shared itinerary with specific venues and logistics. After each meetup, a feedback loop updates trust scores and improves future matches.
-
-The core idea: you shouldn't have to scroll forums or hope to run into someone at a hostel. You say what you want to do and when — the system handles the rest.
-
----
+Detour: An app that helps users engage in their favorite hobbies with others while in a new city. This project aims to make it easier for solo travelers to meet new people based on shared interests and make friends. You post what you want to do, the app matches you with a compatible traveler in the same city, and generates a concrete itinerary for your day together. After the meetup, both travelers rate the experience, and those ratings build a trust score that helps surface more reliable matches in the future.
 
 ## How It Works
 
-1. **Post an activity** — describe what you want to do, pick a category (hiking, food, nightlife, culture, etc.), and set a city and date.
-2. **Get matched** — the matching engine scores other open activities using LLM-based intent understanding, shared interests, and how closely your dates align.
+1. **Post an activity** — describe what you want to do, pick a category (hiking, food, music, art, etc.), and set a city and date.
+2. **Get matched** — the matching engine scores other open activities using shared interests and how closely your dates align.
 3. **Connect** — send a match request to a traveler whose plans overlap with yours.
 4. **Get an itinerary** — once matched, the AI generates a day plan with specific venues, times, and logistics tailored to both travelers.
 5. **Leave feedback** — rate the experience and say whether you'd meet again. Ratings feed back into each user's trust score, which influences future matches.
@@ -24,7 +20,7 @@ The core idea: you shouldn't have to scroll forums or hope to run into someone a
 | Backend | Node.js, Express 4 |
 | Database | MongoDB via Mongoose |
 | Auth | JWT (stored in localStorage) |
-| AI | Anthropic Claude (claude-opus-4-7, adaptive thinking) |
+| AI | Anthropic Claude  |
 
 ---
 
@@ -175,15 +171,13 @@ The matching engine (`backend/src/services/matchingService.js`) scores candidate
 - **Shared interests** — +10 points per overlapping interest tag
 - **Date proximity** — up to +10 points, dropping by 5 for each day apart
 
-Results come back sorted highest-to-lowest. Post-meetup ratings feed into each user's trust score, which will weight future match results — higher-trust users surface higher in candidate lists.
+Results come back sorted highest-to-lowest. Trust score weighting — where higher-rated users surface higher in candidate lists — is planned for a future update.
 
 ---
 
 ## AI Itinerary Generation
 
-When a match is confirmed, `aiService.js` sends a prompt to Claude (claude-opus-4-7 with adaptive thinking) containing both travelers' names, interests, the activity category, city, and date. Claude returns a JSON object with a summary paragraph and an array of stops — each with a time, venue name, description, and duration. That's saved to the database and shown on the itinerary page.
-
-The prompt instructs the model to pick specific, real venues rather than generic suggestions, and to account for travel time between stops.
+When a match is confirmed, the app sends a prompt to Claude containing both travelers' names, interests, activity category, city, and date. Claude returns a JSON object with a summary and an array of stops — each with a time, venue name, description, and duration. The prompt instructs the model to pick specific real venues and account for travel time between stops.
 
 ---
 
@@ -196,3 +190,7 @@ The prompt instructs the model to pick specific, real venues rather than generic
 | `JWT_SECRET` | Secret used to sign and verify tokens |
 | `ANTHROPIC_API_KEY` | Anthropic API key for itinerary generation |
 | `NODE_ENV` | `development` or `production` |
+
+## AI Usage
+
+Built with Claude Code (Anthropic) for initial scaffolding and development assistance. The Anthropic Claude API is used at runtime to generate itineraries for matched travelers.
