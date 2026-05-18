@@ -177,7 +177,7 @@ Results come back sorted highest-to-lowest. Trust score weighting — where high
 
 ## AI Itinerary Generation
 
-When a match is confirmed, the app sends a prompt to Claude containing both travelers' names, interests, activity category, city, and date. Claude returns a JSON object with a summary and an array of stops — each with a time, venue name, description, and duration. The prompt instructs the model to pick specific real venues and account for travel time between stops.
+When a match is confirmed, the app sends a prompt to Claude containing both travelers' names, interests, activity category, city, and date. Claude returns a JSON object with a summary and an array of stops — each with a time, venue name, description, and duration. The prompt instructs the model to create a practical, fun plan for two people meeting for the first time, and return structured JSON with a summary paragraph and an array of stops.
 
 ---
 

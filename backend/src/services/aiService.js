@@ -23,7 +23,6 @@ Return only valid JSON, no markdown or extra text.
   const response = await client.messages.create({
     model: 'claude-opus-4-7',
     max_tokens: 1024,
-    thinking: { type: 'adaptive' },
     messages: [{ role: 'user', content: prompt }],
   });
 
