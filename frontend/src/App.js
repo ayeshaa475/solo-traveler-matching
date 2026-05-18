@@ -8,6 +8,7 @@ import RegisterPage from './pages/RegisterPage';
 import ActivitiesPage from './pages/ActivitiesPage';
 import MatchesPage from './pages/MatchesPage';
 import ItineraryPage from './pages/ItineraryPage';
+import ProfileSetupPage from './pages/ProfileSetupPage';
 
 const PrivateRoute = ({ children }) => {
   const { user } = useAuth();
@@ -22,6 +23,7 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/profile-setup" element={<PrivateRoute><ProfileSetupPage /></PrivateRoute>} />
         <Route path="/activities" element={<PrivateRoute><ActivitiesPage /></PrivateRoute>} />
         <Route path="/matches" element={<PrivateRoute><MatchesPage /></PrivateRoute>} />
         <Route path="/itinerary/:id" element={<PrivateRoute><ItineraryPage /></PrivateRoute>} />

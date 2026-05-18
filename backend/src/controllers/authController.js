@@ -38,3 +38,17 @@ exports.getMe = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+exports.updateProfile = async (req, res) => {
+  try {
+    const { interests, bio, currentCity } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { ...(interests && { interests }), ...(bio && { bio }), ...(currentCity && { currentCity }) },
+      { new: true }
+    ).select('-password');
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

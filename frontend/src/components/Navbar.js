@@ -3,11 +3,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const styles = {
-  nav: { background: '#fff', borderBottom: '1px solid #ede5df', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56 },
-  brand: { color: '#1a1208', fontWeight: 700, fontSize: 18 },
-  links: { display: 'flex', gap: 20, alignItems: 'center' },
-  link: { color: '#6b5e52', fontSize: 14, fontWeight: 500 },
-  btn: { background: '#0d9488', color: '#fff', padding: '6px 14px', fontSize: 13, borderRadius: 6, border: 'none', cursor: 'pointer' },
+  nav: { background: '#fff', borderBottom: '1px solid #f3f4f6', padding: '0 48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60 },
+  brand: { color: '#0A2F5C', fontWeight: 700, fontSize: 18, letterSpacing: '-0.01em' },
+  links: { display: 'flex', gap: 24, alignItems: 'center' },
+  link: { color: '#6b7280', fontSize: 14, fontWeight: 500 },
+  btn: { background: '#0F4A80', color: '#fff', padding: '8px 20px', fontSize: 14, fontWeight: 600, borderRadius: 8, border: 'none', cursor: 'pointer', letterSpacing: '-0.01em' },
+  outlineBtn: { background: 'transparent', color: '#0f0f0f', padding: '8px 20px', fontSize: 14, fontWeight: 500, borderRadius: 8, border: '1.5px solid #e5e7eb', cursor: 'pointer' },
 };
 
 export default function Navbar() {
@@ -28,8 +29,8 @@ export default function Navbar() {
           </>
         ) : (
           <>
-            <Link to="/login" style={styles.link}>Login</Link>
-            <Link to="/register" style={styles.link}>Register</Link>
+            <Link to="/login" style={styles.outlineBtn}>Sign In</Link>
+            <Link to="/register"><button style={styles.btn}>Get Started</button></Link>
           </>
         )}
       </div>

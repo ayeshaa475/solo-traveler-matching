@@ -3,17 +3,17 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../services/api';
 
 const s = {
-  wrap: { maxWidth: 860, margin: '0 auto', padding: '32px 24px' },
-  h1: { fontSize: 26, fontWeight: 700, color: '#1e1b4b', marginBottom: 24 },
-  card: { background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', marginBottom: 16 },
+  wrap: { maxWidth: 860, margin: '0 auto', padding: '40px 24px' },
+  h1: { fontSize: 28, fontWeight: 800, color: '#0A2F5C', marginBottom: 24, letterSpacing: '-0.02em' },
+  card: { background: '#fff', borderRadius: 14, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(10,47,92,0.06)', marginBottom: 16, border: '1px solid #f3f4f6' },
   row: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' },
-  name: { fontWeight: 700, fontSize: 16, color: '#1e1b4b' },
+  name: { fontWeight: 700, fontSize: 16, color: '#0A2F5C', letterSpacing: '-0.01em' },
   meta: { fontSize: 13, color: '#6b7280', marginTop: 4 },
-  score: { background: '#ede9fe', color: '#4f46e5', fontWeight: 700, borderRadius: 8, padding: '4px 12px', fontSize: 14 },
-  matchBtn: { background: '#4f46e5', color: '#fff', fontSize: 13, padding: '8px 16px', marginTop: 12 },
-  itinBtn: { background: '#10b981', color: '#fff', fontSize: 13, padding: '8px 16px', marginTop: 8 },
-  section: { marginBottom: 40 },
-  sectionTitle: { fontSize: 18, fontWeight: 700, color: '#374151', marginBottom: 16 },
+  score: { background: '#E8F5E3', color: '#0F4A80', fontWeight: 700, borderRadius: 8, padding: '4px 12px', fontSize: 14 },
+  matchBtn: { background: '#0F4A80', color: '#fff', fontSize: 13, fontWeight: 600, padding: '8px 18px', marginTop: 14, borderRadius: 7, border: 'none', cursor: 'pointer' },
+  itinBtn: { background: '#1A6FA8', color: '#fff', fontSize: 13, fontWeight: 600, padding: '8px 18px', marginTop: 10, borderRadius: 7, border: 'none', cursor: 'pointer' },
+  section: { marginBottom: 48 },
+  sectionTitle: { fontSize: 18, fontWeight: 700, color: '#374151', marginBottom: 16, letterSpacing: '-0.01em' },
 };
 
 export default function MatchesPage() {

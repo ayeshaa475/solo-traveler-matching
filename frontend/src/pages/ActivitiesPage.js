@@ -3,25 +3,25 @@ import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
 const s = {
-  wrap: { maxWidth: 900, margin: '0 auto', padding: '32px 24px' },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  h1: { fontSize: 26, fontWeight: 700, color: '#1e1b4b' },
-  addBtn: { background: '#4f46e5', color: '#fff', padding: '10px 20px' },
-  filters: { display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' },
+  wrap: { maxWidth: 900, margin: '0 auto', padding: '40px 24px' },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 },
+  h1: { fontSize: 28, fontWeight: 800, color: '#0A2F5C', letterSpacing: '-0.02em' },
+  addBtn: { background: '#0F4A80', color: '#fff', padding: '10px 22px', fontSize: 14, fontWeight: 600, borderRadius: 8, border: 'none', cursor: 'pointer' },
+  filters: { display: 'flex', gap: 12, marginBottom: 28, flexWrap: 'wrap' },
   filterInput: { maxWidth: 180 },
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 20 },
-  card: { background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.08)' },
-  cardTitle: { fontWeight: 700, marginBottom: 6, fontSize: 16, color: '#1e1b4b' },
-  badge: { display: 'inline-block', background: '#ede9fe', color: '#4f46e5', fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 20, marginBottom: 8 },
+  card: { background: '#fff', borderRadius: 14, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(10,47,92,0.06)', border: '1px solid #f3f4f6' },
+  cardTitle: { fontWeight: 700, marginBottom: 6, fontSize: 16, color: '#0A2F5C', letterSpacing: '-0.01em' },
+  badge: { display: 'inline-block', background: '#E8F5E3', color: '#0F4A80', fontSize: 12, fontWeight: 600, padding: '3px 10px', borderRadius: 20, marginBottom: 10 },
   meta: { fontSize: 13, color: '#6b7280', marginBottom: 4 },
-  matchBtn: { background: '#10b981', color: '#fff', fontSize: 13, padding: '8px 14px', marginTop: 12 },
-  form: { background: '#fff', borderRadius: 12, padding: 24, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', marginBottom: 32 },
-  formTitle: { fontWeight: 700, fontSize: 18, marginBottom: 16, color: '#1e1b4b' },
+  matchBtn: { background: '#0F4A80', color: '#fff', fontSize: 13, fontWeight: 600, padding: '8px 16px', marginTop: 14, borderRadius: 7, border: 'none', cursor: 'pointer' },
+  form: { background: '#fff', borderRadius: 14, padding: 28, boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(10,47,92,0.06)', marginBottom: 32, border: '1px solid #f3f4f6' },
+  formTitle: { fontWeight: 700, fontSize: 18, marginBottom: 20, color: '#0A2F5C', letterSpacing: '-0.01em' },
   row: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 },
   field: { marginBottom: 12 },
   label: { display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 4, color: '#374151' },
-  submitBtn: { background: '#4f46e5', color: '#fff', padding: '10px 24px' },
-  cancelBtn: { background: '#e5e7eb', color: '#374151', padding: '10px 24px', marginLeft: 8 },
+  submitBtn: { background: '#0F4A80', color: '#fff', padding: '10px 24px', fontSize: 14, fontWeight: 600, borderRadius: 8, border: 'none', cursor: 'pointer' },
+  cancelBtn: { background: '#f3f4f6', color: '#374151', padding: '10px 24px', marginLeft: 8, fontSize: 14, fontWeight: 500, borderRadius: 8, border: 'none', cursor: 'pointer' },
 };
 
 const CATEGORIES = ['hiking', 'food', 'nightlife', 'culture', 'adventure', 'relaxation', 'other'];
