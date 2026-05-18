@@ -34,11 +34,9 @@ const s = {
     fontSize: 22,
     color: '#374151',
     lineHeight: 1.7,
-    maxWidth: 600,
+    maxWidth: 560,
     marginBottom: 52,
     fontWeight: 500,
-    textAlign: 'center',
-    margin: '0 auto 52px',
   },
   btnGroup: { display: 'flex', gap: 14, justifyContent: 'center' },
   primary: {
@@ -63,11 +61,14 @@ const s = {
     cursor: 'pointer',
   },
 
+  // Steps get the gradient; CTA is separate
   gradientWrap: {
     background: `linear-gradient(to bottom, #ffffff, ${PALETTE.mint} 20%, ${PALETTE.sage} 65%, ${PALETTE.teal} 100%)`,
   },
 
-  step: { padding: '120px 0' },
+  step: {
+    padding: '120px 0',
+  },
   stepInner: {
     maxWidth: 1100,
     margin: '0 auto',
@@ -104,10 +105,19 @@ const s = {
     opacity: 0.75,
   },
 
+  // CTA breaks back to white
   bottomCta: {
     textAlign: 'center',
     padding: '140px 24px',
-    background: `linear-gradient(to bottom, ${PALETTE.teal} 0%, #c8e8f5 30%, #ddf2f9 55%, #eef9fc 75%, #ffffff 100%)`,
+    background: '#ffffff',
+  },
+  ctaLabel: {
+    fontSize: 12,
+    fontWeight: 700,
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase',
+    color: PALETTE.teal,
+    marginBottom: 24,
   },
   ctaHeadline: {
     fontSize: 48,
@@ -118,7 +128,7 @@ const s = {
     marginBottom: 48,
   },
   ctaBtn: {
-    background: PALETTE.deepBlue,
+    background: PALETTE.teal,
     color: '#fff',
     padding: '20px 56px',
     fontSize: 18,
@@ -165,7 +175,7 @@ export default function HomePage() {
         </p>
         {!user && (
           <div style={s.btnGroup}>
-            <Link to="/onboarding"><button style={s.primary}>Get Started</button></Link>
+            <Link to="/register"><button style={s.primary}>Get Started</button></Link>
             <Link to="/login"><button style={s.secondary}>Sign In</button></Link>
           </div>
         )}
@@ -192,8 +202,9 @@ export default function HomePage() {
 
       {!user && (
         <div style={s.bottomCta}>
-          <div style={s.ctaHeadline}>Meet your next travel companion!</div>
-          <Link to="/onboarding"><button style={s.ctaBtn}>Get Started</button></Link>
+          <div style={s.ctaLabel}>Ready?</div>
+          <div style={s.ctaHeadline}>Find someone to explore with.</div>
+          <Link to="/register"><button style={s.ctaBtn}>Get Started — it's free</button></Link>
         </div>
       )}
     </div>

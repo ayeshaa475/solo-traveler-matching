@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 
 const styles = {
   nav: { background: '#fff', borderBottom: '1px solid #f3f4f6', padding: '0 48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60 },
-  brand: { color: '#0A2F5C', fontWeight: 700, fontSize: 18, letterSpacing: '-0.01em' },
+  brand: { color: '#0A2F5C', fontWeight: 800, fontSize: 20, letterSpacing: '-0.02em' },
   links: { display: 'flex', gap: 24, alignItems: 'center' },
   link: { color: '#6b7280', fontSize: 14, fontWeight: 500 },
   btn: { background: '#0F4A80', color: '#fff', padding: '8px 20px', fontSize: 14, fontWeight: 600, borderRadius: 8, border: 'none', cursor: 'pointer', letterSpacing: '-0.01em' },
@@ -27,12 +27,7 @@ export default function Navbar() {
             <Link to="/matches" style={styles.link}>My Matches</Link>
             <button style={styles.btn} onClick={handleLogout}>Logout</button>
           </>
-        ) : (
-          <>
-            <Link to="/login" style={styles.outlineBtn}>Sign In</Link>
-            <Link to="/register"><button style={styles.btn}>Get Started</button></Link>
-          </>
-        )}
+        ) : null}
       </div>
     </nav>
   );

@@ -9,6 +9,7 @@ import ActivitiesPage from './pages/ActivitiesPage';
 import MatchesPage from './pages/MatchesPage';
 import ItineraryPage from './pages/ItineraryPage';
 import ProfileSetupPage from './pages/ProfileSetupPage';
+import OnboardingPage from './pages/OnboardingPage';
 
 const PrivateRoute = ({ children }) => {
   const { user } = useAuth();
@@ -21,6 +22,7 @@ export default function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/onboarding" element={<OnboardingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/profile-setup" element={<PrivateRoute><ProfileSetupPage /></PrivateRoute>} />
