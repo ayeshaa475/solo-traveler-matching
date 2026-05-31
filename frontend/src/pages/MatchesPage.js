@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const s = {
   wrap: { maxWidth: 860, margin: '0 auto', padding: '40px 24px' },
@@ -9,7 +10,7 @@ const s = {
   row: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' },
   name: { fontWeight: 700, fontSize: 16, color: '#0A2F5C', letterSpacing: '-0.01em' },
   meta: { fontSize: 13, color: '#6b7280', marginTop: 4 },
-  score: { background: '#E8F5E3', color: '#0F4A80', fontWeight: 700, borderRadius: 8, padding: '4px 12px', fontSize: 14 },
+  bestMatch: { fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#0d9488', marginBottom: 8 },
   matchBtn: { background: '#0F4A80', color: '#fff', fontSize: 13, fontWeight: 600, padding: '8px 18px', marginTop: 14, borderRadius: 7, border: 'none', cursor: 'pointer' },
   itinBtn: { background: '#1A6FA8', color: '#fff', fontSize: 13, fontWeight: 600, padding: '8px 18px', marginTop: 10, borderRadius: 7, border: 'none', cursor: 'pointer' },
   section: { marginBottom: 48 },
@@ -18,15 +19,47 @@ const s = {
 
 export default function MatchesPage() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const activityId = searchParams.get('activityId');
+  const { activityId } = useParams();
+  const { user: currentUser } = useAuth();
   const [candidates, setCandidates] = useState([]);
   const [myMatches, setMyMatches] = useState([]);
 
   useEffect(() => {
-    api.get('/matches/my').then((r) => setMyMatches(r.data));
+    console.log('[MatchesPage] activityId from URL params:', activityId);
+
+    api.get('/matches/my')
+      .then((r) => {
+        // Deduplicate by activity + sorted participant IDs
+        const seen = new Set();
+        const deduped = r.data.filter((match) => {
+          const participantKey = (match.participants || [])
+            .map((p) => String(p._id))
+            .sort()
+            .join('-');
+          const key = `${match.activity?._id}-${participantKey}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+        setMyMatches(deduped);
+      })
+      .catch((err) => console.error('[MatchesPage] /matches/my error:', err));
+
     if (activityId) {
-      api.get(`/matches/find/${activityId}`).then((r) => setCandidates(r.data));
+      api.get(`/matches/find/${activityId}`)
+        .then((r) => {
+          console.log('[MatchesPage] /matches/find response:', r.data);
+          // Backend returns sorted highest-first, so first occurrence per user is their best activity
+          const seen = new Set();
+          const deduped = r.data.filter(({ activity }) => {
+            const userId = activity.user?._id;
+            if (seen.has(userId)) return false;
+            seen.add(userId);
+            return true;
+          });
+          setCandidates(deduped);
+        })
+        .catch((err) => console.error('[MatchesPage] /matches/find error:', err.response?.data || err.message));
     }
   }, [activityId]);
 
@@ -35,9 +68,31 @@ export default function MatchesPage() {
     navigate('/matches');
   };
 
-  const handleGenerateItinerary = async (matchId) => {
-    const res = await api.post(`/itinerary/generate/${matchId}`);
-    navigate(`/itinerary/${res.data._id}`);
+  const getItineraryId = (itinerary) => {
+    if (!itinerary) return null;
+    if (typeof itinerary === 'string') return itinerary;
+    if (itinerary._id) return itinerary._id.toString();
+    return String(itinerary);
+  };
+
+  const handleGenerateItinerary = async (match) => {
+    const existingId = getItineraryId(match.itinerary);
+    if (existingId) {
+      navigate(`/itinerary/${existingId}`);
+      return;
+    }
+    try {
+      const res = await api.post(`/itinerary/generate/${match._id}`);
+      console.log('Full response data:', JSON.stringify(res.data));
+      const itineraryId = getItineraryId(res.data);
+      if (!itineraryId) {
+        console.error('No itinerary ID in response:', res.data);
+        return;
+      }
+      navigate(`/itinerary/${itineraryId}`);
+    } catch (err) {
+      console.error('Generate itinerary failed:', err.response?.status, err.response?.data || err.message);
+    }
   };
 
   return (
@@ -45,8 +100,9 @@ export default function MatchesPage() {
       {activityId && candidates.length > 0 && (
         <div style={s.section}>
           <h1 style={s.h1}>Suggested Matches</h1>
-          {candidates.map(({ activity, matchScore, sharedInterests }) => (
+          {candidates.map(({ activity, sharedInterests }, index) => (
             <div key={activity._id} style={s.card}>
+              {index === 0 && <div style={s.bestMatch}>Best match</div>}
               <div style={s.row}>
                 <div>
                   <div style={s.name}>{activity.user?.name}</div>
@@ -56,7 +112,6 @@ export default function MatchesPage() {
                     <div style={s.meta}>Shared interests: {sharedInterests.join(', ')}</div>
                   )}
                 </div>
-                <span style={s.score}>{matchScore} pts</span>
               </div>
               <button style={s.matchBtn} onClick={() => handleMatch({ activity })}>Connect</button>
             </div>
@@ -71,14 +126,17 @@ export default function MatchesPage() {
           <div key={match._id} style={s.card}>
             <div style={s.name}>{match.activity?.title}</div>
             <div style={s.meta}>{match.activity?.city} · {match.activity && new Date(match.activity.date).toLocaleDateString()}</div>
-            <div style={s.meta}>With: {match.participants?.map((p) => p.name).join(', ')}</div>
+            <div style={s.meta}>With: {match.participants?.filter((p) => {
+                const myId = currentUser?._id || currentUser?.id;
+                return String(p._id) !== String(myId);
+              }).map((p) => p.name).join(', ')}</div>
             <div style={s.meta}>Status: {match.status}</div>
             {!match.itinerary ? (
-              <button style={s.itinBtn} onClick={() => handleGenerateItinerary(match._id)}>
-                Generate AI Itinerary
+              <button style={s.itinBtn} onClick={() => handleGenerateItinerary(match)}>
+                Generate Itinerary
               </button>
             ) : (
-              <button style={s.itinBtn} onClick={() => navigate(`/itinerary/${match.itinerary}`)}>
+              <button style={s.itinBtn} onClick={() => navigate(`/itinerary/${getItineraryId(match.itinerary)}`)}>
                 View Itinerary
               </button>
             )}

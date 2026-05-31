@@ -19,8 +19,13 @@ exports.generateItinerary = async (req, res) => {
     });
 
     await Match.findByIdAndUpdate(matchId, { itinerary: itinerary._id });
-    res.status(201).json(itinerary);
+
+    const payload = itinerary.toObject();
+    payload._id = itinerary._id.toString();
+    console.log('[itineraryController] sending itinerary payload, _id:', payload._id, 'type:', typeof payload._id);
+    res.status(201).json(payload);
   } catch (err) {
+    console.error('[itineraryController] generateItinerary error:', err.message);
     res.status(500).json({ message: err.message });
   }
 };
@@ -31,6 +36,7 @@ exports.getItinerary = async (req, res) => {
     if (!itinerary) return res.status(404).json({ message: 'Itinerary not found' });
     res.json(itinerary);
   } catch (err) {
+    console.error('[itineraryController] getItinerary error:', err.message);
     res.status(500).json({ message: err.message });
   }
 };

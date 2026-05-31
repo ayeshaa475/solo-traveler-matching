@@ -10,15 +10,12 @@ exports.findMatches = async (req, res) => {
 
     const candidates = await Activity.find({
       _id: { $ne: activityId },
-      city: activity.city,
-      category: activity.category,
+      city: { $regex: new RegExp(`^${activity.city}$`, 'i') },
       status: 'open',
-      date: {
-        $gte: new Date(activity.date.getTime() - 24 * 60 * 60 * 1000),
-        $lte: new Date(activity.date.getTime() + 24 * 60 * 60 * 1000),
-      },
       user: { $ne: activity.user._id },
     }).populate('user', 'name bio interests');
+
+    console.log(`[findMatches] activityId=${activityId} city="${activity.city}" found ${candidates.length} candidates`);
 
     const scored = matchingService.scoreMatches(activity, candidates);
     res.json(scored);
@@ -30,6 +27,13 @@ exports.findMatches = async (req, res) => {
 exports.createMatch = async (req, res) => {
   try {
     const { activityId, targetUserId } = req.body;
+
+    const existing = await Match.findOne({
+      activity: activityId,
+      participants: { $all: [req.user.id, targetUserId] },
+    });
+    if (existing) return res.status(200).json(existing);
+
     const match = await Match.create({
       activity: activityId,
       participants: [req.user.id, targetUserId],
@@ -45,8 +49,7 @@ exports.getMyMatches = async (req, res) => {
   try {
     const matches = await Match.find({ participants: req.user.id })
       .populate('activity')
-      .populate('participants', 'name email bio')
-      .populate('itinerary');
+      .populate('participants', 'name email bio');
     res.json(matches);
   } catch (err) {
     res.status(500).json({ message: err.message });

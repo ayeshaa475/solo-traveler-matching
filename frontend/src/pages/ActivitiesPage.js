@@ -116,7 +116,7 @@ export default function ActivitiesPage() {
             <div style={s.meta}>{a.city} · {new Date(a.date).toLocaleDateString()}</div>
             <div style={s.meta}>By {a.user?.name}</div>
             {a.description && <div style={{ ...s.meta, marginTop: 8 }}>{a.description}</div>}
-            <button style={s.matchBtn} onClick={() => navigate(`/matches?activityId=${a._id}`)}>
+            <button style={s.matchBtn} onClick={() => navigate(`/matches/find/${a._id}`)}>
               Find Matches
             </button>
           </div>

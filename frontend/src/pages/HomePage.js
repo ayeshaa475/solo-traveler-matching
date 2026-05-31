@@ -134,7 +134,7 @@ const steps = [
   {
     num: '01',
     title: 'Post an Activity',
-    desc: 'Say what you want to do — a hike, a food tour, a museum, a night out — and when you want to do it. Takes 30 seconds.',
+    desc: 'Share what you want to do, whether it\'s a hike, a food tour, or visiting a museum, and when you want to do it.',
   },
   {
     num: '02',
@@ -144,7 +144,7 @@ const steps = [
   {
     num: '03',
     title: 'AI Itinerary',
-    desc: 'Once matched, get a day plan with specific venues, times, and logistics — generated for both of you.',
+    desc: 'Once matched, get a day plan with specific venues, times, and logistics generated for both of you.',
   },
   {
     num: '04',
@@ -165,7 +165,7 @@ export default function HomePage() {
         </p>
         {!user && (
           <div style={s.btnGroup}>
-            <Link to="/onboarding"><button style={s.primary}>Get Started</button></Link>
+            <Link to="/register"><button style={s.primary}>Get Started</button></Link>
             <Link to="/login"><button style={s.secondary}>Sign In</button></Link>
           </div>
         )}
@@ -193,7 +193,7 @@ export default function HomePage() {
       {!user && (
         <div style={s.bottomCta}>
           <div style={s.ctaHeadline}>Meet your next travel companion!</div>
-          <Link to="/onboarding"><button style={s.ctaBtn}>Get Started</button></Link>
+          <Link to="/register"><button style={s.ctaBtn}>Get Started</button></Link>
         </div>
       )}
     </div>
