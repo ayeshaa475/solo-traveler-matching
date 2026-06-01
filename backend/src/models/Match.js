@@ -4,7 +4,7 @@ const matchSchema = new mongoose.Schema({
   activity: { type: mongoose.Schema.Types.ObjectId, ref: 'Activity', required: true },
   participants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   itinerary: { type: mongoose.Schema.Types.ObjectId, ref: 'Itinerary' },
-  status: { type: String, enum: ['pending', 'accepted', 'declined', 'completed'], default: 'pending' },
+  status: { type: String, enum: ['pending', 'confirmed', 'completed'], default: 'pending' },
   matchScore: { type: Number },
   createdAt: { type: Date, default: Date.now },
 });
