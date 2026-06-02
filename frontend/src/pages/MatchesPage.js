@@ -6,13 +6,16 @@ import { useAuth } from '../context/AuthContext';
 
 const SOCKET_URL = 'http://localhost:5001';
 
+const PULSE_KEYFRAMES = `@keyframes btn-pulse { 0%,100% { opacity: 0.85; } 50% { opacity: 0.5; } }`;
+
 const s = {
   wrap: { maxWidth: 860, margin: '0 auto', padding: '40px 24px' },
   h1: { fontSize: 28, fontWeight: 800, color: '#0A2F5C', marginBottom: 24, letterSpacing: '-0.02em' },
   card: { background: '#fff', borderRadius: 14, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(10,47,92,0.06)', marginBottom: 16, border: '1px solid #f3f4f6' },
   name: { fontWeight: 700, fontSize: 16, color: '#0A2F5C', letterSpacing: '-0.01em' },
   meta: { fontSize: 13, color: '#6b7280', marginTop: 4 },
-  itinBtn:     { background: '#1A6FA8', color: '#fff', fontSize: 13, fontWeight: 600, padding: '8px 18px', borderRadius: 7, border: 'none', cursor: 'pointer' },
+  itinBtn:        { background: '#1A6FA8', color: '#fff', fontSize: 13, fontWeight: 600, padding: '8px 18px', borderRadius: 7, border: 'none', cursor: 'pointer' },
+  generatingBtn:  { background: '#1A6FA8', color: '#fff', fontSize: 13, fontWeight: 600, padding: '8px 18px', borderRadius: 7, border: 'none', cursor: 'not-allowed', animation: 'btn-pulse 1.4s ease-in-out infinite' },
   acceptBtn:   { background: '#0d9488', color: '#fff', fontSize: 13, fontWeight: 600, padding: '8px 18px', borderRadius: 7, border: 'none', cursor: 'pointer' },
   confirmBtn:  { background: '#0F4A80', color: '#fff', fontSize: 13, fontWeight: 600, padding: '8px 18px', borderRadius: 7, border: 'none', cursor: 'pointer' },
   completeBtn: { background: '#0d9488', color: '#fff', fontSize: 13, fontWeight: 600, padding: '8px 18px', borderRadius: 7, border: 'none', cursor: 'pointer' },
@@ -42,6 +45,7 @@ const s = {
   yesCancelBtn: { background: '#dc2626', color: '#fff', fontSize: 13, fontWeight: 600, padding: '7px 16px', borderRadius: 7, border: 'none', cursor: 'pointer' },
   keepBtn:      { background: 'transparent', color: '#6b7280', fontSize: 13, fontWeight: 500, padding: '7px 14px', borderRadius: 7, border: '1.5px solid #e5e7eb', cursor: 'pointer' },
   errMsg: { color: '#dc2626', fontSize: 13, padding: '10px 14px', background: '#fef2f2', borderRadius: 8, marginTop: 8, border: '1px solid #fecaca' },
+  trustSignal: { fontSize: 12, color: '#9ca3af', marginTop: 2 },
 };
 
 export default function MatchesPage() {
@@ -50,6 +54,7 @@ export default function MatchesPage() {
   const [myMatches, setMyMatches] = useState([]);
   const [pendingCancel, setPendingCancel] = useState(null);
   const [advanceError, setAdvanceError] = useState(null);
+  const [generatingMatchId, setGeneratingMatchId] = useState(null);
   const [submittedFeedbackIds, setSubmittedFeedbackIds] = useState(new Set());
   const socketRef = useRef(null);
 
@@ -148,13 +153,16 @@ export default function MatchesPage() {
   const handleGenerateItinerary = async (match) => {
     const existingId = getItineraryId(match.itinerary);
     if (existingId) { navigate(`/itinerary/${existingId}`); return; }
+    setGeneratingMatchId(match._id);
     try {
       const res = await api.post(`/itinerary/generate/${match._id}`);
       const itineraryId = getItineraryId(res.data);
       if (!itineraryId) { console.error('No itinerary ID in response:', res.data); return; }
-      navigate(`/itinerary/${itineraryId}`);
+      navigate(`/itinerary/${itineraryId}`, { state: { city: match.activity?.city } });
     } catch (err) {
       console.error('Generate itinerary failed:', err.response?.status, err.response?.data || err.message);
+    } finally {
+      setGeneratingMatchId(null);
     }
   };
 
@@ -185,10 +193,17 @@ export default function MatchesPage() {
     }
 
     if (status === 'confirmed') {
+      const isGenerating = generatingMatchId === matchId;
       return (
         <div>
           <div style={s.btnRow}>
-            <button style={s.itinBtn} onClick={() => handleGenerateItinerary(match)}>View Itinerary</button>
+            <button
+              style={isGenerating ? s.generatingBtn : s.itinBtn}
+              onClick={() => handleGenerateItinerary(match)}
+              disabled={isGenerating}
+            >
+              {isGenerating ? 'Creating your itinerary...' : itineraryId ? 'View Itinerary' : 'Plan Itinerary'}
+            </button>
             <button style={s.completeBtn} onClick={() => handleAdvanceStatus(matchId)}>Mark as completed</button>
           </div>
           <div style={{ ...s.btnRow, marginTop: 8 }}>
@@ -247,6 +262,7 @@ export default function MatchesPage() {
 
   return (
     <div style={s.wrap}>
+      <style>{PULSE_KEYFRAMES}</style>
       <h1 style={s.h1}>My Matches</h1>
       {advanceError && <div style={s.errMsg}>{advanceError}</div>}
       {myMatches.length === 0 && (
@@ -263,6 +279,14 @@ export default function MatchesPage() {
               const myId = currentUser?._id || currentUser?.id;
               return String(p._id) !== String(myId);
             }).map((p) => p.name).join(', ')}</div>
+            {(() => {
+              const myId = currentUser?._id || currentUser?.id;
+              const other = match.participants?.find((p) => String(p._id) !== String(myId));
+              if (!other) return null;
+              return other.completedMeetups
+                ? <div style={s.trustSignal}>★ {(other.averageRating || 0).toFixed(1)} · {other.completedMeetups} meetup{other.completedMeetups !== 1 ? 's' : ''}</div>
+                : <div style={s.trustSignal}>New traveler</div>;
+            })()}
             {showAwaitingBadge
               ? <div style={s.awaitingBadge}>Awaiting response...</div>
               : <div style={s.statusBadge(match.status)}>{match.status}</div>

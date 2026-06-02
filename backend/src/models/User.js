@@ -8,6 +8,11 @@ const userSchema = new mongoose.Schema({
   currentCity: { type: String },
   bio: { type: String, maxlength: 300 },
   interests: [{ type: String }],
+  trustScore:       { type: Number, default: 50 },
+  totalRatings:     { type: Number, default: 0 },
+  averageRating:    { type: Number, default: 0 },
+  completedMeetups: { type: Number, default: 0 },
+  flagCount:        { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
 });
 

@@ -49,9 +49,14 @@ const generateItinerary = async (match) => {
     ? activity.date.toDateString()
     : new Date(activity.date).toDateString();
 
+  const venueClause = activity.venueName
+    ? `The travelers have already chosen to meet at ${activity.venueName} (${activity.venueAddress || activity.city}) as their starting point. Build the rest of the itinerary around this location, keeping all stops within a reasonable distance. The first stop must be ${activity.venueName}.`
+    : '';
+
   const prompt = `You are a travel planner. Create a detailed day itinerary for ${names} who are solo travelers meeting to do "${activity.title}" in ${activity.city} on ${dateStr}.
 Their shared interests include: ${interests || 'general exploration'}.
 Activity category: ${activity.category}.
+${venueClause}
 
 Return a JSON object with:
 - "content": a friendly summary paragraph

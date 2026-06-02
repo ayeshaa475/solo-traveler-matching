@@ -94,7 +94,7 @@ exports.getActivities = async (req, res) => {
     if (excludeUserId) filter.user = { $ne: excludeUserId };
 
     const activities = await Activity.find(filter)
-      .populate('user', 'name bio interests')
+      .populate('user', 'name bio interests averageRating completedMeetups')
       .sort({ date: 1 });
     res.json(activities);
   } catch (err) {

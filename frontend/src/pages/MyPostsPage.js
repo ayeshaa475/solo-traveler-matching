@@ -23,6 +23,7 @@ const s = {
     color: status === 'completed' ? '#0F4A80' : status === 'confirmed' ? '#1d4ed8' : '#6b7280',
   }),
   noMatches: { fontSize: 13, color: '#9ca3af', marginTop: 8 },
+  trustSignal: { fontSize: 12, color: '#9ca3af', marginTop: 2 },
   empty: { color: '#6b7280', fontSize: 14 },
 };
 
@@ -86,6 +87,11 @@ export default function MyPostsPage() {
                           {other?.name || 'Unknown traveler'}
                           <span style={s.statusPill(match.status)}>{match.status}</span>
                         </div>
+                        {other && (
+                          other.completedMeetups
+                            ? <div style={s.trustSignal}>★ {(other.averageRating || 0).toFixed(1)} · {other.completedMeetups} meetup{other.completedMeetups !== 1 ? 's' : ''}</div>
+                            : <div style={s.trustSignal}>New traveler</div>
+                        )}
                         {other?.interests?.length > 0 && (
                           <div style={s.matchInterests}>{other.interests.join(', ')}</div>
                         )}

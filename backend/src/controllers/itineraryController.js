@@ -13,24 +13,48 @@ const populateItinerary = (id) =>
 exports.generateItinerary = async (req, res) => {
   try {
     const { matchId } = req.params;
-    const match = await Match.findById(matchId)
+
+    console.log('[gen] matchId raw:', matchId, 'type:', typeof matchId);
+    const matchOid = new (require('mongoose').Types.ObjectId)(matchId);
+    const existing = await Itinerary.findOne({ match: matchOid });
+    console.log('[gen] existing lookup result:', existing);
+    const existingByString = await Itinerary.find({}).select('match').lean();
+    console.log('[gen] all itineraries match fields:', existingByString.map(i => ({ id: i._id, match: i.match, matchType: typeof i.match })));
+
+    if (existing) {
+      console.log('[gen] returning existing itinerary:', existing._id);
+      return res.json(existing);
+    }
+
+    const match = await Match.findById(matchOid)
       .populate('activity')
       .populate('participants', 'name interests bio');
 
     if (!match) return res.status(404).json({ message: 'Match not found' });
 
     const itineraryData = await aiService.generateItinerary(match);
-    const itinerary = await Itinerary.create({
-      match: matchId,
-      content: itineraryData.content,
-      stops: itineraryData.stops,
-    });
+    let itinerary;
+    try {
+      itinerary = await Itinerary.create({
+        match: matchOid,
+        content: itineraryData.content,
+        stops: itineraryData.stops,
+      });
+    } catch (createErr) {
+      // Race condition: another request created the itinerary between our findOne and create
+      if (createErr.code === 11000) {
+        console.log('[gen] duplicate key race — fetching existing');
+        itinerary = await Itinerary.findOne({ match: matchOid });
+        return res.json(itinerary);
+      }
+      throw createErr;
+    }
 
-    await Match.findByIdAndUpdate(matchId, { itinerary: itinerary._id });
+    await Match.findByIdAndUpdate(matchOid, { itinerary: itinerary._id });
 
     const payload = itinerary.toObject();
     payload._id = itinerary._id.toString();
-    console.log('[itineraryController] sending itinerary payload, _id:', payload._id, 'type:', typeof payload._id);
+    console.log('[gen] created new itinerary _id:', payload._id);
     res.status(201).json(payload);
   } catch (err) {
     console.error('[itineraryController] generateItinerary error:', err.message);

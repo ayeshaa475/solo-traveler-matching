@@ -17,7 +17,7 @@ exports.findMatches = async (req, res) => {
       city: { $regex: new RegExp(`^${activity.city}$`, 'i') },
       status: 'open',
       user: { $ne: activity.user._id },
-    }).populate('user', 'name bio interests');
+    }).populate('user', 'name bio interests trustScore');
 
     console.log(`[findMatches] activityId=${activityId} city="${activity.city}" found ${candidates.length} candidates`);
 
@@ -59,6 +59,7 @@ exports.createMatch = async (req, res) => {
         });
         const io = getIO();
         if (io) {
+          console.log(`[createMatch] emitting notification to room '${activity.user.toString()}'`);
           io.to(activity.user.toString()).emit('notification', {
             _id: notification._id,
             type: notification.type,
@@ -144,7 +145,7 @@ exports.getActivityMatches = async (req, res) => {
     const matches = await Match.find({
       activity: req.params.activityId,
       participants: req.user.id,
-    }).populate('participants', 'name interests bio');
+    }).populate('participants', 'name interests bio averageRating completedMeetups');
     res.json(matches);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -155,7 +156,7 @@ exports.getMyMatches = async (req, res) => {
   try {
     const matches = await Match.find({ participants: req.user.id })
       .populate({ path: 'activity', populate: { path: 'user', select: 'name _id' } })
-      .populate('participants', 'name email bio')
+      .populate('participants', 'name email bio averageRating completedMeetups')
       .populate('initiator', 'name');
     res.json(matches);
   } catch (err) {

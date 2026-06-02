@@ -11,6 +11,8 @@ const activitySchema = new mongoose.Schema({
   },
   city: { type: String, required: true },
   date: { type: Date, required: true },
+  venueName:    { type: String },
+  venueAddress: { type: String },
   maxParticipants: { type: Number, default: 2 },
   status: { type: String, enum: ['open', 'matched', 'completed'], default: 'open' },
   createdAt: { type: Date, default: Date.now },

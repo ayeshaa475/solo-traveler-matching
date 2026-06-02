@@ -16,6 +16,7 @@ const s = {
   badge: { display: 'inline-block', background: '#E8F5E3', color: '#0F4A80', fontSize: 12, fontWeight: 600, padding: '3px 10px', borderRadius: 20, marginBottom: 10 },
   meta: { fontSize: 13, color: '#6b7280', marginBottom: 4 },
   matchBtn: { background: '#0F4A80', color: '#fff', fontSize: 13, fontWeight: 600, padding: '8px 16px', marginTop: 14, borderRadius: 7, border: 'none', cursor: 'pointer' },
+  trustSignal: { fontSize: 12, color: '#9ca3af', marginTop: 2 },
   form: { background: '#fff', borderRadius: 14, padding: 28, boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(10,47,92,0.06)', marginBottom: 32, border: '1px solid #f3f4f6' },
   formTitle: { fontWeight: 700, fontSize: 18, marginBottom: 20, color: '#0A2F5C', letterSpacing: '-0.01em' },
   row: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 },
@@ -67,7 +68,7 @@ export default function ActivitiesPage() {
   const [activities, setActivities] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [filters, setFilters] = useState({ city: '', category: '' });
-  const [form, setForm] = useState({ title: '', description: '', category: 'other', city: '', date: '', maxParticipants: 2 });
+  const [form, setForm] = useState({ title: '', description: '', category: 'other', city: '', date: '', maxParticipants: 2, venueName: '', venueAddress: '' });
   const [intentText, setIntentText] = useState('');
   const [suggesting, setSuggesting] = useState(false);
   const [venues, setVenues] = useState([]);
@@ -114,14 +115,14 @@ export default function ActivitiesPage() {
 
   const handleSelectVenue = (venue) => {
     setSelectedVenue(venue.place_id);
-    setForm((prev) => ({ ...prev, title: venue.name }));
+    setForm((prev) => ({ ...prev, title: venue.name, venueName: venue.name, venueAddress: venue.address }));
   };
 
   const handleCreate = async (e) => {
     e.preventDefault();
     await api.post('/activities', form);
     setShowForm(false);
-    setForm({ title: '', description: '', category: 'other', city: '', date: '', maxParticipants: 2 });
+    setForm({ title: '', description: '', category: 'other', city: '', date: '', maxParticipants: 2, venueName: '', venueAddress: '' });
     setIntentText('');
     setVenues([]);
     setSelectedVenue(null);
@@ -227,6 +228,11 @@ export default function ActivitiesPage() {
             <div style={s.cardTitle}>{a.title}</div>
             <div style={s.meta}>{a.city} · {new Date(a.date).toLocaleDateString()}</div>
             <div style={s.meta}>By {a.user?.name}</div>
+            {a.user && (
+              a.user.completedMeetups
+                ? <div style={s.trustSignal}>★ {(a.user.averageRating || 0).toFixed(1)} · {a.user.completedMeetups} meetup{a.user.completedMeetups !== 1 ? 's' : ''}</div>
+                : <div style={s.trustSignal}>New traveler</div>
+            )}
             {a.description && <div style={{ ...s.meta, marginTop: 8 }}>{a.description}</div>}
             <button
               style={s.matchBtn}

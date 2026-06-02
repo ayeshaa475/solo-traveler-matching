@@ -15,6 +15,10 @@ const scoreMatches = (sourceActivity, candidates) => {
       );
       score += Math.max(0, 10 - daysDiff * 5);
 
+      // Trust bonus: ±5 points relative to baseline trust score of 50
+      const trustScore = candidate.user.trustScore ?? 50;
+      score += (trustScore - 50) / 10;
+
       return { activity: candidate, matchScore: score, sharedInterests };
     })
     .sort((a, b) => b.matchScore - a.matchScore);

@@ -22,7 +22,7 @@ const setupSocket = (httpServer) => {
 
   io.on('connection', (socket) => {
     socket.join(socket.userId);
-    console.log(`[socket] User ${socket.userId} connected`);
+    console.log(`[socket] User ${socket.userId} connected and joined room '${socket.userId}'`);
     socket.on('disconnect', () => {
       console.log(`[socket] User ${socket.userId} disconnected`);
     });

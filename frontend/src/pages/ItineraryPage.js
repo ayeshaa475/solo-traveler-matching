@@ -1,10 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 const SOCKET_URL = 'http://localhost:5001';
+
+const LOADING_KEYFRAMES = `
+  @keyframes itin-spin { to { transform: rotate(360deg); } }
+  @keyframes itin-fill { 0% { width: 0%; } 100% { width: 78%; } }
+`;
 
 const s = {
   wrap: { maxWidth: 700, margin: '0 auto', padding: '40px 24px' },
@@ -45,6 +50,7 @@ const s = {
 export default function ItineraryPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { state: routeState } = useLocation();
   const { user: currentUser } = useAuth();
   const socketRef = useRef(null);
 
@@ -317,9 +323,27 @@ export default function ItineraryPage() {
     </div>
   );
 
-  if (!itinerary) return (
-    <div style={{ padding: 40, textAlign: 'center', color: '#6b7280' }}>Loading itinerary...</div>
-  );
+  if (!itinerary) {
+    const city = routeState?.city;
+    return (
+      <>
+        <style>{LOADING_KEYFRAMES}</style>
+        <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div style={{ background: '#fff', borderRadius: 20, padding: '48px 40px', maxWidth: 420, width: '100%', textAlign: 'center', boxShadow: '0 4px 32px rgba(10,47,92,0.10)', border: '1px solid #f3f4f6' }}>
+            <div style={{ fontWeight: 800, fontSize: 24, color: '#0A2F5C', letterSpacing: '-0.02em', marginBottom: 32 }}>Detour</div>
+            <div style={{ width: 48, height: 48, border: '3px solid #e0f2f1', borderTopColor: '#0d9488', borderRadius: '50%', animation: 'itin-spin 0.9s linear infinite', margin: '0 auto 28px' }} />
+            <div style={{ fontWeight: 700, fontSize: 18, color: '#0A2F5C', marginBottom: 8, letterSpacing: '-0.01em' }}>
+              {city ? `Our AI is planning your day in ${city}...` : 'Our AI is crafting your itinerary...'}
+            </div>
+            <div style={{ fontSize: 13, color: '#9ca3af', marginBottom: 32 }}>This usually takes 10–15 seconds</div>
+            <div style={{ background: '#f3f4f6', borderRadius: 99, height: 6, overflow: 'hidden' }}>
+              <div style={{ height: '100%', borderRadius: 99, background: 'linear-gradient(90deg, #0d9488, #2E9DC8)', animation: 'itin-fill 12s cubic-bezier(0.15, 0, 0.3, 1) forwards' }} />
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <div style={s.wrap}>

@@ -11,7 +11,7 @@ const pendingRevisionSchema = new mongoose.Schema({
 }, { _id: false });
 
 const itinerarySchema = new mongoose.Schema({
-  match: { type: mongoose.Schema.Types.ObjectId, ref: 'Match', required: true },
+  match: { type: mongoose.Schema.Types.ObjectId, ref: 'Match', required: true, unique: true },
   generatedBy: { type: String, default: 'ai' },
   content: { type: String, required: true },
   stops: [stopShape],

@@ -23,6 +23,11 @@ const BellIcon = () => (
   </svg>
 );
 
+const TOAST_KEYFRAMES = `
+  @keyframes toast-in  { from { transform: translateX(110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  @keyframes toast-out { from { transform: translateX(0);    opacity: 1; } to { transform: translateX(110%); opacity: 0; } }
+`;
+
 const styles = {
   nav: { background: '#fff', borderBottom: '1px solid #f3f4f6', padding: '0 48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60, position: 'relative', zIndex: 100 },
   brand: { color: '#0A2F5C', fontWeight: 800, fontSize: 20, letterSpacing: '-0.02em' },
@@ -50,6 +55,18 @@ const styles = {
   notifTime: { fontSize: 11, color: '#9ca3af' },
   notifEmpty: { padding: '24px 16px', textAlign: 'center', fontSize: 13, color: '#9ca3af' },
 
+  // Toast
+  toast: (exiting) => ({
+    position: 'fixed', top: 80, right: 24, zIndex: 9999,
+    background: '#fff', borderRadius: 10, borderLeft: '4px solid #2E9DC8',
+    boxShadow: '0 4px 24px rgba(10,47,92,0.14)',
+    padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: 12,
+    maxWidth: 360, minWidth: 260,
+    animation: exiting ? 'toast-out 0.3s ease-in forwards' : 'toast-in 0.35s ease-out forwards',
+  }),
+  toastMsg: { flex: 1, fontSize: 13, color: '#0A2F5C', fontWeight: 500, lineHeight: 1.5 },
+  toastX: { background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 18, padding: 0, lineHeight: 1, flexShrink: 0, alignSelf: 'center' },
+
   // Profile dropdown
   section: { padding: '12px 16px', borderBottom: '1px solid #f3f4f6' },
   userName: { fontWeight: 700, fontSize: 14, color: '#0A2F5C', letterSpacing: '-0.01em' },
@@ -76,8 +93,12 @@ export default function Navbar() {
   const [saved, setSaved] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [toast, setToast] = useState(null);
+  const [toastQueue, setToastQueue] = useState([]);
+  const [toastExiting, setToastExiting] = useState(false);
   const containerRef = useRef(null);
   const socketRef = useRef(null);
+  const autoDismissRef = useRef(null);
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -91,9 +112,13 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Load notifications + connect socket when user is available
+  // Stable user identity string — avoids reconnecting the socket when user
+  // properties change (e.g. trust score updates) vs. when the user actually changes.
+  const userId = user?._id?.toString?.() || user?.id || null;
+
+  // Load notifications + connect socket when user identity is available
   useEffect(() => {
-    if (!user) return;
+    if (!userId) return;
     const token = localStorage.getItem('token');
 
     api.get('/notifications').then((r) => {
@@ -104,13 +129,47 @@ export default function Navbar() {
     const socket = io(SOCKET_URL, { auth: { token } });
     socketRef.current = socket;
 
+    socket.on('connect', () => {
+      console.log('[Navbar] socket connected, id:', socket.id);
+    });
+
+    socket.on('connect_error', (err) => {
+      console.error('[Navbar] socket connect_error:', err.message);
+    });
+
     socket.on('notification', (notif) => {
       setNotifications((prev) => [notif, ...prev]);
       setUnreadCount((prev) => prev + 1);
+      setToastQueue((prev) => [...prev, { id: notif._id || Date.now(), message: notif.message }]);
     });
 
     return () => { socket.disconnect(); socketRef.current = null; };
-  }, [user]);
+  }, [userId]);
+
+  // Dequeue the next toast whenever the current one finishes
+  useEffect(() => {
+    if (toast !== null || toastQueue.length === 0) return;
+    const [next, ...rest] = toastQueue;
+    setToastQueue(rest);
+    setToast(next);
+    setToastExiting(false);
+  }, [toast, toastQueue]);
+
+  // Auto-dismiss after 4 seconds
+  useEffect(() => {
+    if (!toast || toastExiting) return;
+    autoDismissRef.current = setTimeout(() => {
+      setToastExiting(true);
+      setTimeout(() => { setToast(null); setToastExiting(false); }, 320);
+    }, 4000);
+    return () => clearTimeout(autoDismissRef.current);
+  }, [toast, toastExiting]);
+
+  const handleDismissToast = () => {
+    clearTimeout(autoDismissRef.current);
+    setToastExiting(true);
+    setTimeout(() => { setToast(null); setToastExiting(false); }, 320);
+  };
 
   const handleBellClick = () => {
     setOpenDropdown((prev) => prev === 'notifications' ? null : 'notifications');
@@ -165,6 +224,14 @@ export default function Navbar() {
   };
 
   return (
+    <>
+    <style>{TOAST_KEYFRAMES}</style>
+    {toast && (
+      <div style={styles.toast(toastExiting)}>
+        <span style={styles.toastMsg}>{toast.message}</span>
+        <button style={styles.toastX} onClick={handleDismissToast} aria-label="Dismiss">×</button>
+      </div>
+    )}
     <nav style={styles.nav}>
       <Link to="/" style={styles.brand}>Detour</Link>
       <div style={styles.links} ref={containerRef}>
@@ -245,5 +312,6 @@ export default function Navbar() {
         ) : null}
       </div>
     </nav>
+    </>
   );
 }
