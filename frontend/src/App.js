@@ -9,6 +9,8 @@ import ActivitiesPage from './pages/ActivitiesPage';
 import MatchesPage from './pages/MatchesPage';
 import ItineraryPage from './pages/ItineraryPage';
 import ProfileSetupPage from './pages/ProfileSetupPage';
+import MyPostsPage from './pages/MyPostsPage';
+import FeedbackPage from './pages/FeedbackPage';
 
 const PrivateRoute = ({ children }) => {
   const { user } = useAuth();
@@ -25,9 +27,10 @@ export default function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/profile-setup" element={<PrivateRoute><ProfileSetupPage /></PrivateRoute>} />
         <Route path="/activities" element={<PrivateRoute><ActivitiesPage /></PrivateRoute>} />
+        <Route path="/my-posts" element={<PrivateRoute><MyPostsPage /></PrivateRoute>} />
         <Route path="/matches" element={<PrivateRoute><MatchesPage /></PrivateRoute>} />
-        <Route path="/matches/find/:activityId" element={<PrivateRoute><MatchesPage /></PrivateRoute>} />
         <Route path="/itinerary/:id" element={<PrivateRoute><ItineraryPage /></PrivateRoute>} />
+        <Route path="/feedback/:matchId" element={<PrivateRoute><FeedbackPage /></PrivateRoute>} />
       </Routes>
     </>
   );

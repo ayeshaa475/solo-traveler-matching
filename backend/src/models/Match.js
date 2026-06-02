@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const matchSchema = new mongoose.Schema({
   activity: { type: mongoose.Schema.Types.ObjectId, ref: 'Activity', required: true },
   participants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  initiator: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   itinerary: { type: mongoose.Schema.Types.ObjectId, ref: 'Itinerary' },
   status: { type: String, enum: ['pending', 'confirmed', 'completed'], default: 'pending' },
   matchScore: { type: Number },

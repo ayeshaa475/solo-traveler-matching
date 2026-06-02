@@ -43,10 +43,15 @@ exports.getMe = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
   try {
-    const { interests, bio, currentCity } = req.body;
+    const { name, interests, bio, currentCity } = req.body;
     const user = await User.findByIdAndUpdate(
       req.user.id,
-      { ...(interests && { interests }), ...(bio && { bio }), ...(currentCity && { currentCity }) },
+      {
+        ...(name && { name }),
+        ...(interests && { interests }),
+        ...(bio && { bio }),
+        ...(currentCity && { currentCity }),
+      },
       { new: true }
     ).select('-password');
     res.json(user);

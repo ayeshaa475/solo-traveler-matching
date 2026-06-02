@@ -1,7 +1,10 @@
 const Match = require('../models/Match');
 const Activity = require('../models/Activity');
 const Itinerary = require('../models/Itinerary');
+const User = require('../models/User');
+const Notification = require('../models/Notification');
 const matchingService = require('../services/matchingService');
+const { getIO } = require('../socket');
 
 exports.findMatches = async (req, res) => {
   try {
@@ -38,7 +41,38 @@ exports.createMatch = async (req, res) => {
     const match = await Match.create({
       activity: activityId,
       participants: [req.user.id, targetUserId],
+      initiator: req.user.id,
     });
+
+    // Notify the activity owner
+    try {
+      const [sender, activity] = await Promise.all([
+        User.findById(req.user.id).select('name'),
+        Activity.findById(activityId).select('title user'),
+      ]);
+      if (sender && activity && activity.user.toString() !== req.user.id) {
+        const notification = await Notification.create({
+          recipient: activity.user,
+          sender: req.user.id,
+          type: 'new_match',
+          message: `${sender.name} wants to join your "${activity.title}"`,
+        });
+        const io = getIO();
+        if (io) {
+          io.to(activity.user.toString()).emit('notification', {
+            _id: notification._id,
+            type: notification.type,
+            message: notification.message,
+            read: notification.read,
+            createdAt: notification.createdAt,
+            sender: { name: sender.name },
+          });
+        }
+      }
+    } catch (notifErr) {
+      console.error('[createMatch] notification error:', notifErr.message);
+    }
+
     res.status(201).json(match);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -47,12 +81,21 @@ exports.createMatch = async (req, res) => {
 
 exports.advanceStatus = async (req, res) => {
   try {
-    const match = await Match.findOne({ _id: req.params.id, participants: req.user.id });
+    const match = await Match.findOne({ _id: req.params.id, participants: req.user.id })
+      .populate('activity');
     if (!match) return res.status(404).json({ message: 'Match not found' });
 
     const transitions = { pending: 'confirmed', confirmed: 'completed' };
     const next = transitions[match.status];
     if (!next) return res.status(400).json({ message: 'Match is already completed' });
+
+    // Only the activity owner can accept (pending → confirmed)
+    if (match.status === 'pending') {
+      const ownerId = match.activity?.user?.toString();
+      if (ownerId !== req.user.id) {
+        return res.status(403).json({ message: 'Only the activity owner can accept this match.' });
+      }
+    }
 
     if (next === 'completed' && !match.itinerary) {
       return res.status(400).json({ message: 'Generate an itinerary before marking complete.' });
@@ -60,6 +103,19 @@ exports.advanceStatus = async (req, res) => {
 
     match.status = next;
     await match.save();
+
+    // Emit socket event to all participants with fully populated match
+    const io = getIO();
+    if (io) {
+      const populatedMatch = await Match.findById(match._id)
+        .populate({ path: 'activity', populate: { path: 'user', select: 'name _id' } })
+        .populate('participants', 'name email bio')
+        .populate('initiator', 'name');
+      match.participants.forEach((participantId) => {
+        io.to(participantId.toString()).emit('match_updated', populatedMatch);
+      });
+    }
+
     res.json({ status: match.status });
   } catch (err) {
     console.error('[matchController] advanceStatus error:', err.message);
@@ -83,11 +139,24 @@ exports.deleteMatch = async (req, res) => {
   }
 };
 
+exports.getActivityMatches = async (req, res) => {
+  try {
+    const matches = await Match.find({
+      activity: req.params.activityId,
+      participants: req.user.id,
+    }).populate('participants', 'name interests bio');
+    res.json(matches);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 exports.getMyMatches = async (req, res) => {
   try {
     const matches = await Match.find({ participants: req.user.id })
-      .populate('activity')
-      .populate('participants', 'name email bio');
+      .populate({ path: 'activity', populate: { path: 'user', select: 'name _id' } })
+      .populate('participants', 'name email bio')
+      .populate('initiator', 'name');
     res.json(matches);
   } catch (err) {
     res.status(500).json({ message: err.message });
