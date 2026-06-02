@@ -12,14 +12,19 @@ exports.findMatches = async (req, res) => {
     const activity = await Activity.findById(activityId).populate('user');
     if (!activity) return res.status(404).json({ message: 'Activity not found' });
 
-    const candidates = await Activity.find({
+    const hasCoords = activity.location?.lat != null && activity.location?.lng != null;
+    const candidateFilter = {
       _id: { $ne: activityId },
-      city: { $regex: new RegExp(`^${activity.city}$`, 'i') },
       status: 'open',
       user: { $ne: activity.user._id },
-    }).populate('user', 'name bio interests trustScore');
+    };
+    if (!hasCoords) {
+      candidateFilter.city = { $regex: new RegExp(`^${activity.city}$`, 'i') };
+    }
 
-    console.log(`[findMatches] activityId=${activityId} city="${activity.city}" found ${candidates.length} candidates`);
+    const candidates = await Activity.find(candidateFilter).populate('user', 'name bio interests trustScore');
+
+    console.log(`[findMatches] activityId=${activityId} city="${activity.city}" hasCoords=${hasCoords} found ${candidates.length} candidates`);
 
     const scored = matchingService.scoreMatches(activity, candidates);
     res.json(scored);

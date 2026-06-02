@@ -1,3 +1,42 @@
+const CATEGORY_TYPES = {
+  food:       ['restaurant', 'cafe', 'bakery'],
+  nightlife:  ['bar', 'night_club', 'restaurant'],
+  culture:    ['museum', 'art_gallery', 'tourist_attraction'],
+  hiking:     ['park', 'campground', 'natural_feature'],
+  adventure:  ['park', 'amusement_park', 'tourist_attraction'],
+  relaxation: ['spa', 'park', 'cafe'],
+  other:      ['tourist_attraction', 'restaurant', 'park'],
+};
+
+const fetchNearbyVenues = async (lat, lng, category) => {
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+  if (!apiKey) return [];
+
+  const types = CATEGORY_TYPES[category] || CATEGORY_TYPES.other;
+  const base = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json';
+
+  const results = await Promise.all(
+    types.map(async (type) => {
+      try {
+        const res = await fetch(`${base}?location=${lat},${lng}&radius=1500&type=${type}&key=${apiKey}`);
+        const data = await res.json();
+        if (data.status !== 'OK' || !data.results?.length) return null;
+        const place = data.results[0];
+        return { name: place.name, address: place.vicinity, place_id: place.place_id };
+      } catch {
+        return null;
+      }
+    })
+  );
+
+  const seen = new Set();
+  return results.filter((v) => {
+    if (!v || seen.has(v.place_id)) return false;
+    seen.add(v.place_id);
+    return true;
+  });
+};
+
 const repairTruncatedJson = (text) => {
   // Find the last complete closing brace so we only keep complete stop objects
   const lastBrace = text.lastIndexOf('}');
@@ -49,9 +88,35 @@ const generateItinerary = async (match) => {
     ? activity.date.toDateString()
     : new Date(activity.date).toDateString();
 
-  const venueClause = activity.venueName
-    ? `The travelers have already chosen to meet at ${activity.venueName} (${activity.venueAddress || activity.city}) as their starting point. Build the rest of the itinerary around this location, keeping all stops within a reasonable distance. The first stop must be ${activity.venueName}.`
-    : '';
+  let venueClause = '';
+  const hasCoords = activity.location?.lat != null && activity.location?.lng != null;
+
+  if (hasCoords) {
+    console.log('[aiService] Fetching nearby venues for', activity.category, 'at', activity.location.lat, activity.location.lng);
+    const nearby = await fetchNearbyVenues(activity.location.lat, activity.location.lng, activity.category);
+    console.log('[aiService] Nearby venues found:', nearby.length);
+
+    if (activity.venueName) {
+      const startAddr = activity.venueAddress || activity.city;
+      if (nearby.length > 0) {
+        const nearbyList = nearby
+          .map((v) => `${v.name} (${v.address || activity.city})`)
+          .join(', ');
+        venueClause = `The first stop MUST be ${activity.venueName} at ${startAddr}. Then continue with these nearby venues in order: ${nearbyList}.`;
+      } else {
+        venueClause = `The first stop MUST be ${activity.venueName} at ${startAddr}.`;
+      }
+    } else if (nearby.length > 0) {
+      const venueList = nearby
+        .map((v) => `${v.name} (${v.address || activity.city})`)
+        .join(', ');
+      venueClause = `Build an itinerary using ONLY these specific venues in order, do not suggest any other locations: ${venueList}. Write connecting narrative between them and suggest realistic timings.`;
+    }
+  }
+
+  if (!venueClause && activity.venueName) {
+    venueClause = `The first stop MUST be ${activity.venueName} at ${activity.venueAddress || activity.city}. Keep all other stops nearby.`;
+  }
 
   const prompt = `You are a travel planner. Create a detailed day itinerary for ${names} who are solo travelers meeting to do "${activity.title}" in ${activity.city} on ${dateStr}.
 Their shared interests include: ${interests || 'general exploration'}.

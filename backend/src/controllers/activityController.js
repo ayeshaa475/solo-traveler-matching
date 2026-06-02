@@ -55,6 +55,8 @@ exports.suggestActivity = async (req, res) => {
       name: place.name,
       address: place.formatted_address,
       place_id: place.place_id,
+      lat: place.geometry?.location?.lat ?? null,
+      lng: place.geometry?.location?.lng ?? null,
     }));
 
     res.json({ parsed, venues, activityLabel });
@@ -66,6 +68,7 @@ exports.suggestActivity = async (req, res) => {
 
 exports.createActivity = async (req, res) => {
   try {
+    console.log('[createActivity] body:', req.body);
     const activity = await Activity.create({ ...req.body, user: req.user.id });
     res.status(201).json(activity);
   } catch (err) {
@@ -84,18 +87,38 @@ exports.getMyActivities = async (req, res) => {
   }
 };
 
+const haversineDistance = (lat1, lng1, lat2, lng2) => {
+  const R = 3958.8;
+  const toRad = (d) => d * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
 exports.getActivities = async (req, res) => {
   try {
-    const { city, category, date, excludeUserId } = req.query;
+    const { city, category, date, excludeUserId, lat, lng, radius } = req.query;
     const filter = { status: 'open' };
     if (city) filter.city = new RegExp(city, 'i');
     if (category) filter.category = category;
     if (date) filter.date = { $gte: new Date(date) };
     if (excludeUserId) filter.user = { $ne: excludeUserId };
 
-    const activities = await Activity.find(filter)
+    let activities = await Activity.find(filter)
       .populate('user', 'name bio interests averageRating completedMeetups')
       .sort({ date: 1 });
+
+    if (lat != null && lng != null) {
+      const userLat = parseFloat(lat);
+      const userLng = parseFloat(lng);
+      const r = radius ? parseFloat(radius) : 40;
+      activities = activities.filter((a) => {
+        if (a.location?.lat == null || a.location?.lng == null) return true;
+        return haversineDistance(userLat, userLng, a.location.lat, a.location.lng) <= r;
+      });
+    }
+
     res.json(activities);
   } catch (err) {
     res.status(500).json({ message: err.message });

@@ -1,7 +1,32 @@
+const haversineDistance = (lat1, lng1, lat2, lng2) => {
+  const R = 3958.8;
+  const toRad = (d) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
 const scoreMatches = (sourceActivity, candidates) => {
   const sourceInterests = sourceActivity.user.interests || [];
+  const srcLat = sourceActivity.location?.lat;
+  const srcLng = sourceActivity.location?.lng;
+  const srcHasCoords = srcLat != null && srcLng != null;
 
   return candidates
+    .filter((candidate) => {
+      const candLat = candidate.location?.lat;
+      const candLng = candidate.location?.lng;
+      const candHasCoords = candLat != null && candLng != null;
+
+      if (srcHasCoords && candHasCoords) {
+        return haversineDistance(srcLat, srcLng, candLat, candLng) <= 25;
+      }
+      // fall back to city text comparison
+      return (candidate.city || '').toLowerCase() === (sourceActivity.city || '').toLowerCase();
+    })
     .map((candidate) => {
       let score = 0;
 
