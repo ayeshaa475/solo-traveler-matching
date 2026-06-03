@@ -13,14 +13,6 @@ exports.parseActivity = async (req, res) => {
   }
 };
 
-const LEADING_VERBS = new Set(['visit', 'explore', 'find', 'do', 'try', 'go', 'see', 'attend', 'join', 'take', 'check', 'want', 'looking', 'looking for']);
-
-const extractActivityLabel = (description) => {
-  if (!description) return 'activity';
-  const words = description.toLowerCase().replace(/[.,!?]/g, '').split(/\s+/).filter(Boolean);
-  const trimmed = LEADING_VERBS.has(words[0]) ? words.slice(1) : words;
-  return trimmed.slice(0, 4).join(' ');
-};
 
 exports.suggestActivity = async (req, res) => {
   try {
@@ -37,8 +29,7 @@ exports.suggestActivity = async (req, res) => {
     const apiKey = process.env.GOOGLE_PLACES_API_KEY;
     if (!apiKey) throw new Error('GOOGLE_PLACES_API_KEY is not set in environment');
 
-    const activityLabel = extractActivityLabel(parsed.description);
-    const query = `${activityLabel} in ${city}`;
+    const query = `${parsed.description} ${city}`;
     console.log('[suggestActivity] Places query:', query);
 
     const placesUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${apiKey}`;
@@ -51,7 +42,13 @@ exports.suggestActivity = async (req, res) => {
       throw new Error(`Google Places API error: ${placesData.status}${placesData.error_message ? ' — ' + placesData.error_message : ''}`);
     }
 
-    const venues = (placesData.results || []).slice(0, 3).map((place) => ({
+    const results = [...(placesData.results || [])];
+    for (let i = results.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [results[i], results[j]] = [results[j], results[i]];
+    }
+
+    const venues = results.slice(0, 3).map((place) => ({
       name: place.name,
       address: place.formatted_address,
       place_id: place.place_id,
@@ -59,7 +56,7 @@ exports.suggestActivity = async (req, res) => {
       lng: place.geometry?.location?.lng ?? null,
     }));
 
-    res.json({ parsed, venues, activityLabel });
+    res.json({ parsed, venues, activityLabel: parsed.description });
   } catch (err) {
     console.error('[activityController] suggestActivity error:', err.message);
     res.status(500).json({ message: `Venue suggestion failed: ${err.message}` });
@@ -100,7 +97,18 @@ exports.getActivities = async (req, res) => {
   try {
     const { city, category, date, excludeUserId, lat, lng, radius } = req.query;
     const filter = { status: 'open' };
-    if (city) filter.city = new RegExp(city, 'i');
+    if (city) {
+      const CITY_ALIASES = {
+        'new york city': 'new york',
+        'nyc': 'new york',
+        'ny': 'new york',
+        'sf': 'san francisco',
+        'la': 'los angeles',
+      };
+      const normalized = city.trim().toLowerCase();
+      const cityQuery = CITY_ALIASES[normalized] || city.trim();
+      filter.city = new RegExp(cityQuery, 'i');
+    }
     if (category) filter.category = category;
     if (date) filter.date = { $gte: new Date(date) };
     if (excludeUserId) filter.user = { $ne: excludeUserId };

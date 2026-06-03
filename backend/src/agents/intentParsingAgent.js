@@ -34,7 +34,7 @@ The JSON must have exactly these fields:
 - date: the date as a string (e.g. "tomorrow", "2024-12-25", "this Saturday"), or null if not mentioned
 - time_preference: one of "morning", "afternoon", "evening", "flexible"
 - vibe: one of "adventurous", "relaxed", "social", "cultural"
-- description: a clean one-sentence summary of what the traveler wants to do
+- description: the core activity as a concise search-friendly noun phrase suitable for a Google Places query (e.g. "pottery studio", "painting class", "yoga studio", "cooking class", "street food tour", "jazz bar", "rock climbing gym") — for the "other" category always preserve the exact activity noun the person mentioned; never write a full sentence
 
 Return only the JSON object. No markdown code blocks, no preamble.`;
 

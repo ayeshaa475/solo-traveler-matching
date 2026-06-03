@@ -81,7 +81,7 @@ const buildActivities = (users) => [
   {
     user: users[0]._id,
     title: 'Photography walk through DUMBO',
-    description: 'Golden hour shoot under the Manhattan Bridge. Bring your camera — manual settings preferred but not required.',
+    description: 'Golden hour shoot under the Manhattan Bridge. Bring your camera, manual settings preferred but not required.',
     category: 'culture',
     city: 'New York',
     date: daysFromNow(2),
@@ -153,7 +153,7 @@ const buildActivities = (users) => [
   {
     user: users[1]._id,
     title: 'Sunrise yoga in Central Park',
-    description: 'Meeting at the Great Lawn at 6:30am. Bring a mat. Calm, no instruction — just good energy.',
+    description: 'Meeting at the Great Lawn at 6:30am. Bring a mat. Calm, no instruction, just good energy.',
     category: 'relaxation',
     city: 'New York',
     date: daysFromNow(2),
