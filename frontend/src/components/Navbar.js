@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
-const SOCKET_URL = 'http://localhost:5001';
+const SOCKET_URL = process.env.NODE_ENV === 'production'
+  ? 'http://192.34.57.254:5001'
+  : 'http://localhost:5001';
 
 const relativeTime = (date) => {
   const diff = Date.now() - new Date(date).getTime();
@@ -15,6 +17,7 @@ const relativeTime = (date) => {
   if (h < 24) return `${h}h ago`;
   return `${Math.floor(h / 24)}d ago`;
 };
+
 
 const BellIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -29,8 +32,8 @@ const TOAST_KEYFRAMES = `
 `;
 
 const styles = {
-  nav: { background: '#fff', borderBottom: '1px solid #f3f4f6', padding: '0 48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60, position: 'relative', zIndex: 100 },
-  brand: { color: '#0A2F5C', fontWeight: 800, fontSize: 20, letterSpacing: '-0.02em' },
+  nav: { background: '#fff', borderBottom: '1px solid #f3f4f6', padding: '0 48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60, position: 'fixed', top: 0, left: 0, right: 0, width: '100%', zIndex: 1000 },
+  brand: { color: '#0A2F5C', fontFamily: "'Fraunces', Georgia, serif", fontWeight: 700, fontSize: 20, letterSpacing: '-0.02em' },
   links: { display: 'flex', gap: 24, alignItems: 'center' },
   link: { color: '#6b7280', fontSize: 14, fontWeight: 500 },
 
@@ -49,7 +52,7 @@ const styles = {
   // Notification dropdown
   notifHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderBottom: '1px solid #f3f4f6' },
   notifTitle: { fontWeight: 700, fontSize: 14, color: '#0A2F5C' },
-  markAllBtn: { fontSize: 12, color: '#0d9488', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', padding: 0 },
+  markAllBtn: { fontSize: 12, color: '#0F4A80', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', padding: 0 },
   notifItem: (read) => ({ padding: '12px 16px', borderBottom: '1px solid #f9fafb', cursor: 'pointer', background: read ? '#fff' : '#f0f7ff', display: 'block', width: '100%', textAlign: 'left', border: 'none', fontFamily: 'inherit' }),
   notifMsg: { fontSize: 13, color: '#0A2F5C', fontWeight: 500, lineHeight: 1.45, marginBottom: 3 },
   notifTime: { fontSize: 11, color: '#9ca3af' },
@@ -74,9 +77,9 @@ const styles = {
   editRow: { display: 'flex', gap: 6, marginTop: 10 },
   editInput: { flex: 1, padding: '6px 10px', fontSize: 13, borderRadius: 6, border: '1.5px solid #e5e7eb', fontFamily: 'inherit' },
   saveBtn: { background: '#0F4A80', color: '#fff', padding: '6px 12px', fontSize: 12, fontWeight: 600, borderRadius: 6, border: 'none', cursor: 'pointer' },
-  editLink: { fontSize: 12, color: '#0d9488', fontWeight: 600, cursor: 'pointer', marginTop: 6, display: 'inline-block', background: 'none', border: 'none', padding: 0 },
+  editLink: { fontSize: 12, color: '#0F4A80', fontWeight: 600, cursor: 'pointer', marginTop: 6, display: 'inline-block', background: 'none', border: 'none', padding: 0 },
   logoutItem: { padding: '10px 16px', fontSize: 14, color: '#dc2626', cursor: 'pointer', background: 'none', border: 'none', width: '100%', textAlign: 'left', fontFamily: 'inherit', display: 'block', borderTop: '1px solid #f3f4f6', marginTop: 4 },
-  savedMsg: { fontSize: 12, color: '#0d9488', fontWeight: 600, marginTop: 6 },
+  savedMsg: { fontSize: 12, color: '#0F4A80', fontWeight: 600, marginTop: 6 },
 };
 
 const getInitials = (name) => {
@@ -87,6 +90,10 @@ const getInitials = (name) => {
 export default function Navbar() {
   const { user, logout, updateUser } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [isHeroMode, setIsHeroMode] = useState(
+    () => window.location.pathname === '/' && window.scrollY === 0
+  );
   const [openDropdown, setOpenDropdown] = useState(null); // 'notifications' | 'profile' | null
   const [editing, setEditing] = useState(false);
   const [nameInput, setNameInput] = useState('');
@@ -112,7 +119,7 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Stable user identity string — avoids reconnecting the socket when user
+  // Stable user identity string; avoids reconnecting the socket when user
   // properties change (e.g. trust score updates) vs. when the user actually changes.
   const userId = user?._id?.toString?.() || user?.id || null;
 
@@ -164,6 +171,18 @@ export default function Navbar() {
     }, 4000);
     return () => clearTimeout(autoDismissRef.current);
   }, [toast, toastExiting]);
+
+  // Transparent on homepage hero, opaque everywhere else
+  useEffect(() => {
+    if (location.pathname !== '/') {
+      setIsHeroMode(false);
+      return;
+    }
+    const update = () => setIsHeroMode(window.scrollY < window.innerHeight - 80);
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+    return () => window.removeEventListener('scroll', update);
+  }, [location.pathname]);
 
   const handleDismissToast = () => {
     clearTimeout(autoDismissRef.current);
@@ -223,6 +242,16 @@ export default function Navbar() {
     navigate('/');
   };
 
+  const inkColor = isHeroMode ? 'rgba(255,255,255,0.85)' : '#6b7280';
+  const brandCol = isHeroMode ? '#ffffff' : '#0A2F5C';
+  const heroRing = '0 0 0 2px #0A2F5C, 0 0 0 4px rgba(255,255,255,0.75)';
+  const avatarStyle = isHeroMode
+    ? { ...styles.avatar, border: 'none', boxShadow: heroRing }
+    : styles.avatar;
+  const avatarOpenStyle = isHeroMode
+    ? { ...styles.avatarOpen, border: 'none', boxShadow: heroRing }
+    : styles.avatarOpen;
+
   return (
     <>
     <style>{TOAST_KEYFRAMES}</style>
@@ -232,18 +261,23 @@ export default function Navbar() {
         <button style={styles.toastX} onClick={handleDismissToast} aria-label="Dismiss">×</button>
       </div>
     )}
-    <nav style={styles.nav}>
-      <Link to="/" style={styles.brand}>Detour</Link>
+    <nav style={{
+      ...styles.nav,
+      background: isHeroMode ? 'transparent' : '#fff',
+      borderBottom: isHeroMode ? 'none' : '1px solid #f3f4f6',
+      boxShadow: isHeroMode ? 'none' : undefined,
+    }}>
+      <Link to="/" style={{ ...styles.brand, color: brandCol }}>Detour</Link>
       <div style={styles.links} ref={containerRef}>
         {user ? (
           <>
-            <Link to="/activities" style={styles.link}>Browse</Link>
-            <Link to="/my-posts" style={styles.link}>My Posts</Link>
-            <Link to="/matches" style={styles.link}>My Matches</Link>
+            <Link to="/activities" style={{ ...styles.link, color: inkColor }}>Browse</Link>
+            <Link to="/my-posts" style={{ ...styles.link, color: inkColor }}>My Posts</Link>
+            <Link to="/matches" style={{ ...styles.link, color: inkColor }}>My Matches</Link>
 
             {/* Bell */}
             <div style={styles.dropdownWrap}>
-              <div style={styles.bellWrap} onClick={handleBellClick}>
+              <div style={{ ...styles.bellWrap, color: inkColor }} onClick={handleBellClick}>
                 <BellIcon />
                 {unreadCount > 0 && (
                   <span style={styles.badge}>{unreadCount > 9 ? '9+' : unreadCount}</span>
@@ -275,7 +309,7 @@ export default function Navbar() {
             {/* Profile avatar */}
             <div style={styles.dropdownWrap}>
               <div
-                style={openDropdown === 'profile' ? styles.avatarOpen : styles.avatar}
+                style={openDropdown === 'profile' ? avatarOpenStyle : avatarStyle}
                 onClick={handleAvatarClick}
               >
                 {getInitials(user.name)}

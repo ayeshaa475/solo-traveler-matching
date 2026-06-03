@@ -144,7 +144,7 @@ const steps = [
   {
     num: '01',
     title: 'Post an Activity',
-    desc: 'Say what you want to do — a hike, a food tour, a museum, a night out — and when you want to do it. Takes 30 seconds.',
+    desc: 'Say what you want to do, a hike, a food tour, a museum, or a night out, and when you want to do it. Takes 30 seconds.',
   },
   {
     num: '02',
@@ -154,7 +154,7 @@ const steps = [
   {
     num: '03',
     title: 'AI Itinerary',
-    desc: 'Once matched, get a day plan with specific venues, times, and logistics — generated for both of you.',
+    desc: 'Once matched, get a day plan with specific venues, times, and logistics generated for both of you.',
   },
   {
     num: '04',
@@ -171,7 +171,7 @@ export default function HomePage() {
       <div style={s.hero}>
         <h1 style={s.h1}>Travel solo. Explore together.</h1>
         <p style={s.sub}>
-          Post what you want to do. Get matched with a solo traveler in the same city, on the same day, with the same idea.
+          Connect with a solo traveler in the same city, on the same day, with the same idea.
         </p>
         {!user && (
           <div style={s.btnGroup}>
@@ -204,7 +204,7 @@ export default function HomePage() {
         <div style={s.bottomCta}>
           <div style={s.ctaLabel}>Ready?</div>
           <div style={s.ctaHeadline}>Find someone to explore with.</div>
-          <Link to="/register"><button style={s.ctaBtn}>Get Started — it's free</button></Link>
+          <Link to="/register"><button style={s.ctaBtn}>Get Started</button></Link>
         </div>
       )}
     </div>

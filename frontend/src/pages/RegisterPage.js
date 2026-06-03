@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const s = {
-  page: { background: '#ffffff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  page: { background: '#ffffff', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: 60 },
   wrap: { maxWidth: 420, width: '100%', margin: '0 24px', padding: 36, background: '#fff', borderRadius: 16, boxShadow: '0 2px 24px rgba(10,47,92,0.08)' },
   h2: { fontSize: 24, fontWeight: 800, marginBottom: 8, color: '#0A2F5C', letterSpacing: '-0.02em' },
   sub: { fontSize: 14, color: '#6b7280', marginBottom: 28 },

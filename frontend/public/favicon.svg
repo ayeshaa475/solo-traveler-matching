@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <circle cx="16" cy="16" r="16" fill="#0A2F5C"/>
+  <!-- North needle (white) -->
+  <path d="M16 5 L20 16 L16 14 L12 16 Z" fill="#ffffff"/>
+  <!-- South needle (blue) -->
+  <path d="M16 27 L12 16 L16 18 L20 16 Z" fill="#2E9DC8"/>
+  <!-- Center dot -->
+  <circle cx="16" cy="16" r="2" fill="#0A2F5C"/>
+  <circle cx="16" cy="16" r="1.5" fill="#ffffff"/>
+</svg>

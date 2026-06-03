@@ -2,15 +2,39 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
+const StarRating = ({ value, onChange }) => (
+  <div style={{ display: 'flex', gap: 2, marginTop: 4 }}>
+    {[1, 2, 3, 4, 5].map((n) => (
+      <button
+        key={n}
+        type="button"
+        onClick={() => onChange(n)}
+        style={{
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          padding: '2px 4px',
+          fontSize: 36,
+          color: n <= value ? '#f59e0b' : '#d1d5db',
+          transition: 'color 0.12s',
+          lineHeight: 1,
+        }}
+      >
+        ★
+      </button>
+    ))}
+  </div>
+);
+
 const s = {
-  page: { background: '#ffffff', minHeight: '100vh', padding: '60px 24px' },
-  wrap: { maxWidth: 520, margin: '0 auto' },
+  page: { background: '#ffffff', minHeight: '100vh', padding: '120px 24px 60px' },
+  wrap: { maxWidth: 600, margin: '0 auto' },
   h1: { fontSize: 26, fontWeight: 800, color: '#0A2F5C', marginBottom: 6, letterSpacing: '-0.02em' },
   sub: { fontSize: 14, color: '#6b7280', marginBottom: 36 },
-  card: { background: '#fff', borderRadius: 14, padding: 32, boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(10,47,92,0.06)', border: '1px solid #f3f4f6' },
-  field: { marginBottom: 20 },
-  label: { display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: '#374151' },
-  checkRow: { display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 },
+  card: { background: '#fff', borderRadius: 6, padding: '36px 40px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0' },
+  field: { marginBottom: 28 },
+  label: { display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 8, color: '#374151' },
+  checkRow: { display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 28 },
   checkLabel: { display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: '#374151', cursor: 'pointer' },
   submitBtn: { background: '#0F4A80', color: '#fff', padding: '12px 32px', fontSize: 15, fontWeight: 600, borderRadius: 8, border: 'none', cursor: 'pointer', width: '100%' },
   backBtn: { background: 'transparent', color: '#6b7280', padding: '12px 0', fontSize: 14, fontWeight: 500, border: 'none', cursor: 'pointer', marginTop: 12, display: 'block' },
@@ -72,15 +96,7 @@ export default function FeedbackPage() {
           <form onSubmit={handleSubmit}>
             <div style={s.field}>
               <label style={s.label}>Rating</label>
-              <select
-                value={form.rating}
-                onChange={(e) => setForm({ ...form, rating: Number(e.target.value) })}
-                style={{ width: '100%' }}
-              >
-                {[5, 4, 3, 2, 1].map((n) => (
-                  <option key={n} value={n}>{n} — {['', 'Poor', 'Fair', 'Good', 'Great', 'Excellent'][n]}</option>
-                ))}
-              </select>
+              <StarRating value={form.rating} onChange={(n) => setForm({ ...form, rating: n })} />
             </div>
             <div style={s.field}>
               <label style={s.label}>Comment</label>

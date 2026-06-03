@@ -4,7 +4,9 @@ import { io } from 'socket.io-client';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
-const SOCKET_URL = 'http://localhost:5001';
+const SOCKET_URL = process.env.NODE_ENV === 'production'
+  ? 'http://192.34.57.254:5001'
+  : 'http://localhost:5001';
 
 const LOADING_KEYFRAMES = `
   @keyframes itin-spin { to { transform: rotate(360deg); } }
@@ -12,39 +14,44 @@ const LOADING_KEYFRAMES = `
 `;
 
 const s = {
-  wrap: { maxWidth: 700, margin: '0 auto', padding: '40px 24px' },
-  h1: { fontSize: 28, fontWeight: 800, color: '#0A2F5C', marginBottom: 8, letterSpacing: '-0.02em' },
-  summary: { color: '#6b7280', fontSize: 15, lineHeight: 1.7, marginBottom: 36 },
-  stop: { background: '#fff', borderRadius: 14, padding: 24, marginBottom: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(10,47,92,0.06)', border: '1px solid #f3f4f6' },
-  stopInner: { borderLeft: '4px solid #0F4A80', paddingLeft: 16 },
-  tealStopInner: { borderLeft: '4px solid #0d9488', paddingLeft: 16 },
-  time: { fontWeight: 700, color: '#0F4A80', fontSize: 13, marginBottom: 4 },
+  pageWrap: { background: '#ffffff', minHeight: '100vh', paddingTop: 60 },
+  headerGradient: {
+    background: '#ffffff',
+    padding: '48px 24px 32px',
+  },
+  headerInner: { maxWidth: 700, margin: '0 auto', padding: '0 48px' },
+  wrap: { maxWidth: 700, margin: '0 auto', padding: '0 48px 60px' },
+  h1: { fontSize: 28, fontWeight: 800, color: '#0A2F5C', marginBottom: 8, letterSpacing: '-0.02em', fontFamily: 'Fraunces, serif' },
+  summary: { color: '#6b7280', fontSize: 15, lineHeight: 1.7, marginBottom: 0 },
+  stop: { background: '#fff', borderRadius: 6, padding: 24, marginBottom: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0' },
+  stopInner: { borderLeft: '4px solid #0A2F5C', paddingLeft: 16 },
+  tealStopInner: { borderLeft: '4px solid #0A2F5C', paddingLeft: 16 },
+  time: { fontWeight: 800, color: '#0A2F5C', fontSize: 16, marginBottom: 6 },
   place: { fontWeight: 700, fontSize: 16, color: '#0A2F5C', marginBottom: 4, letterSpacing: '-0.01em' },
   desc: { fontSize: 14, color: '#6b7280', lineHeight: 1.65 },
   duration: { fontSize: 12, color: '#9ca3af', marginTop: 6 },
-  actionBox: { background: '#fff', borderRadius: 14, padding: 28, boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(10,47,92,0.06)', marginTop: 36, border: '1px solid #f3f4f6' },
+  actionBox: { background: '#fff', borderRadius: 6, padding: 28, boxShadow: '0 1px 4px rgba(0,0,0,0.06)', marginTop: 36, border: '1px solid #f0f0f0' },
   completedMsg: { fontSize: 22, fontWeight: 800, color: '#0A2F5C', marginBottom: 6, letterSpacing: '-0.01em' },
   completedSub: { fontSize: 14, color: '#6b7280' },
   btnRow: { display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' },
   cancelBtn: { background: 'transparent', color: '#6b7280', padding: '10px 18px', fontSize: 14, fontWeight: 500, borderRadius: 8, border: '1.5px solid #e5e7eb', cursor: 'pointer' },
-  completeBtn: { background: '#0d9488', color: '#fff', padding: '10px 22px', fontSize: 14, fontWeight: 600, borderRadius: 8, border: 'none', cursor: 'pointer' },
+  completeBtn: { background: '#0F4A80', color: '#fff', padding: '10px 22px', fontSize: 14, fontWeight: 600, borderRadius: 8, border: 'none', cursor: 'pointer' },
   errMsg: { color: '#dc2626', fontSize: 14, padding: '12px 16px', background: '#fef2f2', borderRadius: 8, marginTop: 8 },
-  cancelConfirm: { marginTop: 12, padding: '14px 16px', background: '#fef2f2', borderRadius: 10, border: '1px solid #fecaca' },
+  cancelConfirm: { marginTop: 12, padding: '14px 16px', background: '#fef2f2', borderRadius: 6, border: '1px solid #fecaca' },
   cancelQuestion: { fontSize: 13, fontWeight: 600, color: '#991b1b', marginBottom: 10 },
   cancelConfirmRow: { display: 'flex', gap: 8 },
   yesCancelBtn: { background: '#dc2626', color: '#fff', fontSize: 13, fontWeight: 600, padding: '7px 16px', borderRadius: 7, border: 'none', cursor: 'pointer' },
   keepBtn: { background: 'transparent', color: '#6b7280', fontSize: 13, fontWeight: 500, padding: '7px 14px', borderRadius: 7, border: '1.5px solid #e5e7eb', cursor: 'pointer' },
-  // Edit / revision styles
-  editBtn: { background: 'transparent', color: '#0d9488', fontSize: 12, fontWeight: 600, padding: '4px 12px', borderRadius: 6, border: '1.5px solid #0d9488', cursor: 'pointer', flexShrink: 0 },
+  editBtn: { background: 'transparent', color: '#0F4A80', fontSize: 12, fontWeight: 600, padding: '4px 12px', borderRadius: 6, border: '1.5px solid #0F4A80', cursor: 'pointer', flexShrink: 0 },
   removeBtn: { background: 'transparent', color: '#dc2626', fontSize: 12, fontWeight: 600, padding: '4px 12px', borderRadius: 6, border: '1.5px solid #fecaca', cursor: 'pointer', flexShrink: 0 },
   removingBtn: { background: 'transparent', color: '#9ca3af', fontSize: 12, fontWeight: 600, padding: '4px 12px', borderRadius: 6, border: '1.5px solid #e5e7eb', cursor: 'not-allowed', flexShrink: 0 },
-  proposeBtn: { background: '#0d9488', color: '#fff', fontSize: 13, fontWeight: 600, padding: '8px 18px', borderRadius: 7, border: 'none', cursor: 'pointer' },
+  proposeBtn: { background: '#0F4A80', color: '#fff', fontSize: 13, fontWeight: 600, padding: '8px 18px', borderRadius: 7, border: 'none', cursor: 'pointer' },
   proposingBtn: { background: '#e5e7eb', color: '#9ca3af', fontSize: 13, fontWeight: 600, padding: '8px 18px', borderRadius: 7, border: 'none', cursor: 'not-allowed' },
-  acceptBtn: { background: '#0d9488', color: '#fff', fontSize: 13, fontWeight: 600, padding: '8px 18px', borderRadius: 7, border: 'none', cursor: 'pointer' },
+  acceptBtn: { background: '#0F4A80', color: '#fff', fontSize: 13, fontWeight: 600, padding: '8px 18px', borderRadius: 7, border: 'none', cursor: 'pointer' },
   acceptRemoveBtn: { background: '#dc2626', color: '#fff', fontSize: 13, fontWeight: 600, padding: '8px 18px', borderRadius: 7, border: 'none', cursor: 'pointer' },
   rejectBtn: { background: 'transparent', color: '#dc2626', fontSize: 13, fontWeight: 600, padding: '8px 16px', borderRadius: 7, border: '1.5px solid #fecaca', cursor: 'pointer' },
-  pendingBanner: { background: '#f0fdfa', border: '1px solid #99f6e4', borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontSize: 13, color: '#0f766e', fontWeight: 500 },
-  revisionMsg: { background: '#f0fdfa', border: '1px solid #99f6e4', borderRadius: 10, padding: '12px 16px', marginTop: 16, fontSize: 14, color: '#0f766e', fontWeight: 600, textAlign: 'center' },
+  pendingBanner: { background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 6, padding: '12px 16px', marginBottom: 16, fontSize: 13, color: '#0F4A80', fontWeight: 500 },
+  revisionMsg: { background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 6, padding: '12px 16px', marginTop: 16, fontSize: 14, color: '#0F4A80', fontWeight: 600, textAlign: 'center' },
 };
 
 export default function ItineraryPage() {
@@ -60,7 +67,6 @@ export default function ItineraryPage() {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [cancelError, setCancelError] = useState(null);
 
-  // Edit / revision state
   const [editingStop, setEditingStop] = useState(null);
   const [editRequest, setEditRequest] = useState('');
   const [proposing, setProposing] = useState(false);
@@ -196,7 +202,7 @@ export default function ItineraryPage() {
   const renderStopContent = (stop, accentStyle) => (
     <div style={accentStyle}>
       {stop.time && <div style={s.time}>{stop.time}</div>}
-      {stop.place && <div style={s.place}>{stop.place}</div>}
+      {stop.place && <div style={s.place}>📍 {stop.place}</div>}
       {stop.description && <div style={s.desc}>{stop.description}</div>}
       {stop.duration && <div style={s.duration}>Duration: {stop.duration}</div>}
     </div>
@@ -236,14 +242,12 @@ export default function ItineraryPage() {
       return (
         <div key={i} style={s.stop}>
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            {/* Original — greyed out */}
             <div style={{ flex: '1 1 200px', opacity: 0.45 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Original</div>
               {renderStopContent(pr.original_stop, s.stopInner)}
             </div>
-            {/* Proposed — highlighted */}
-            <div style={{ flex: '1 1 200px', background: '#f0fdfa', borderRadius: 10, padding: 16, border: '1.5px solid #0d9488' }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#0d9488', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Proposed change</div>
+            <div style={{ flex: '1 1 200px', background: '#eff6ff', borderRadius: 6, padding: 16, border: '1.5px solid #0F4A80' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#0F4A80', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Proposed change</div>
               {renderStopContent(pr.proposed_stop, s.tealStopInner)}
               {isProposer && (
                 <div style={{ fontSize: 13, color: '#6b7280', marginTop: 12, fontStyle: 'italic' }}>
@@ -267,7 +271,7 @@ export default function ItineraryPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
           <div style={{ ...s.stopInner, flex: 1 }}>
             {stop.time && <div style={s.time}>{stop.time}</div>}
-            {stop.place && <div style={s.place}>{stop.place}</div>}
+            {stop.place && <div style={s.place}>📍 {stop.place}</div>}
             {stop.description && <div style={s.desc}>{stop.description}</div>}
             {stop.duration && <div style={s.duration}>Duration: {stop.duration}</div>}
           </div>
@@ -329,15 +333,15 @@ export default function ItineraryPage() {
       <>
         <style>{LOADING_KEYFRAMES}</style>
         <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div style={{ background: '#fff', borderRadius: 20, padding: '48px 40px', maxWidth: 420, width: '100%', textAlign: 'center', boxShadow: '0 4px 32px rgba(10,47,92,0.10)', border: '1px solid #f3f4f6' }}>
+          <div style={{ background: '#fff', borderRadius: 6, padding: '48px 40px', maxWidth: 420, width: '100%', textAlign: 'center', boxShadow: '0 4px 32px rgba(10,47,92,0.10)', border: '1px solid #f0f0f0' }}>
             <div style={{ fontWeight: 800, fontSize: 24, color: '#0A2F5C', letterSpacing: '-0.02em', marginBottom: 32 }}>Detour</div>
-            <div style={{ width: 48, height: 48, border: '3px solid #e0f2f1', borderTopColor: '#0d9488', borderRadius: '50%', animation: 'itin-spin 0.9s linear infinite', margin: '0 auto 28px' }} />
+            <div style={{ width: 48, height: 48, border: '3px solid #dbeafe', borderTopColor: '#0F4A80', borderRadius: '50%', animation: 'itin-spin 0.9s linear infinite', margin: '0 auto 28px' }} />
             <div style={{ fontWeight: 700, fontSize: 18, color: '#0A2F5C', marginBottom: 8, letterSpacing: '-0.01em' }}>
               {city ? `Our AI is planning your day in ${city}...` : 'Our AI is crafting your itinerary...'}
             </div>
             <div style={{ fontSize: 13, color: '#9ca3af', marginBottom: 32 }}>This usually takes 10–15 seconds</div>
             <div style={{ background: '#f3f4f6', borderRadius: 99, height: 6, overflow: 'hidden' }}>
-              <div style={{ height: '100%', borderRadius: 99, background: 'linear-gradient(90deg, #0d9488, #2E9DC8)', animation: 'itin-fill 12s cubic-bezier(0.15, 0, 0.3, 1) forwards' }} />
+              <div style={{ height: '100%', borderRadius: 99, background: 'linear-gradient(90deg, #0F4A80, #2E9DC8)', animation: 'itin-fill 12s cubic-bezier(0.15, 0, 0.3, 1) forwards' }} />
             </div>
           </div>
         </div>
@@ -346,59 +350,63 @@ export default function ItineraryPage() {
   }
 
   return (
-    <div style={s.wrap}>
-      <h1 style={s.h1}>Your Shared Itinerary</h1>
-      {itinerary.content && <p style={s.summary}>{itinerary.content}</p>}
-
-      {/* Pending revision banner */}
-      {pr && matchStatus === 'confirmed' && (
-        <div style={s.pendingBanner}>
-          {isProposer
-            ? `Waiting for ${otherName} to review your proposed change below.`
-            : `${otherName} has proposed a change — see below to accept or reject.`}
+    <div style={s.pageWrap}>
+      <div style={s.headerGradient}>
+        <div style={s.headerInner}>
+          <h1 style={s.h1}>Your Shared Itinerary</h1>
+          {itinerary.content && <p style={s.summary}>{itinerary.content}</p>}
         </div>
-      )}
-      {!pr && matchStatus === 'confirmed' && (
-        <div style={{ fontSize: 13, color: '#9ca3af', marginBottom: 12 }}>
-          Tap <strong>Edit</strong> on any stop to suggest a change.
-        </div>
-      )}
-
-      <div>
-        {itinerary.stops?.length > 0 ? (
-          itinerary.stops.map((stop, i) => renderStop(stop, i))
-        ) : (
-          <div style={{ color: '#6b7280', fontSize: 14, marginBottom: 24 }}>No stops found in this itinerary.</div>
-        )}
       </div>
 
-      {revisionMsg && <div style={s.revisionMsg}>{revisionMsg}</div>}
-
-      {/* Action section — varies by match status */}
-      {matchStatus === 'completed' ? (
-        <div style={s.actionBox}>
-          <div style={s.completedMsg}>Meetup marked complete!</div>
-          <div style={s.completedSub}>Hope it was a great experience.</div>
-        </div>
-      ) : (
-        <div style={s.actionBox}>
-          {markCompleteError && <div style={s.errMsg}>{markCompleteError}</div>}
-          <div style={s.btnRow}>
-            <button style={s.completeBtn} onClick={handleMarkComplete}>Mark as completed</button>
-            <button style={s.cancelBtn} onClick={() => setShowCancelConfirm(true)}>Cancel</button>
+      <div style={s.wrap}>
+        {pr && matchStatus === 'confirmed' && (
+          <div style={{ ...s.pendingBanner, marginTop: 24 }}>
+            {isProposer
+              ? `Waiting for ${otherName} to review your proposed change below.`
+              : `${otherName} has proposed a change. See below to accept or reject.`}
           </div>
-          {showCancelConfirm && (
-            <div style={s.cancelConfirm}>
-              <div style={s.cancelQuestion}>Are you sure? This will permanently delete this match and cannot be undone.</div>
-              <div style={s.cancelConfirmRow}>
-                <button style={s.yesCancelBtn} onClick={handleCancel}>Yes, cancel</button>
-                <button style={s.keepBtn} onClick={() => setShowCancelConfirm(false)}>Keep it</button>
-              </div>
-              {cancelError && <div style={s.errMsg}>{cancelError}</div>}
-            </div>
+        )}
+        {!pr && matchStatus === 'confirmed' && (
+          <div style={{ fontSize: 13, color: '#9ca3af', marginBottom: 12, marginTop: 24 }}>
+            Tap <strong>Edit</strong> on any stop to suggest a change.
+          </div>
+        )}
+
+        <div style={{ marginTop: pr || matchStatus === 'confirmed' ? 0 : 24 }}>
+          {itinerary.stops?.length > 0 ? (
+            itinerary.stops.map((stop, i) => renderStop(stop, i))
+          ) : (
+            <div style={{ color: '#6b7280', fontSize: 14, marginBottom: 24 }}>No stops found in this itinerary.</div>
           )}
         </div>
-      )}
+
+        {revisionMsg && <div style={s.revisionMsg}>{revisionMsg}</div>}
+
+        {matchStatus === 'completed' ? (
+          <div style={s.actionBox}>
+            <div style={s.completedMsg}>Meetup marked complete!</div>
+            <div style={s.completedSub}>Hope it was a great experience.</div>
+          </div>
+        ) : (
+          <div style={s.actionBox}>
+            {markCompleteError && <div style={s.errMsg}>{markCompleteError}</div>}
+            <div style={s.btnRow}>
+              <button style={s.completeBtn} onClick={handleMarkComplete}>Mark as completed</button>
+              <button style={s.cancelBtn} onClick={() => setShowCancelConfirm(true)}>Cancel</button>
+            </div>
+            {showCancelConfirm && (
+              <div style={s.cancelConfirm}>
+                <div style={s.cancelQuestion}>Are you sure? This will permanently delete this match and cannot be undone.</div>
+                <div style={s.cancelConfirmRow}>
+                  <button style={s.yesCancelBtn} onClick={handleCancel}>Yes, cancel</button>
+                  <button style={s.keepBtn} onClick={() => setShowCancelConfirm(false)}>Keep it</button>
+                </div>
+                {cancelError && <div style={s.errMsg}>{cancelError}</div>}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

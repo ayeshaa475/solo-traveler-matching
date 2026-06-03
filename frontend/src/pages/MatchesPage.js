@@ -4,21 +4,48 @@ import { io } from 'socket.io-client';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
-const SOCKET_URL = 'http://localhost:5001';
+const SOCKET_URL = process.env.NODE_ENV === 'production'
+  ? 'http://192.34.57.254:5001'
+  : 'http://localhost:5001';
 
 const PULSE_KEYFRAMES = `@keyframes btn-pulse { 0%,100% { opacity: 0.85; } 50% { opacity: 0.5; } }`;
 
+const PeopleIcon = () => (
+  <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginBottom: 20 }}>
+    <circle cx="36" cy="36" r="36" fill="#E8F5E3" />
+    <circle cx="26" cy="30" r="8" fill="#bfdbfe" stroke="#0F4A80" strokeWidth="1.5" />
+    <circle cx="46" cy="30" r="8" fill="#bfdbfe" stroke="#0F4A80" strokeWidth="1.5" />
+    <path d="M14 52c0-6.627 5.373-12 12-12h20c6.627 0 12 5.373 12 12" stroke="#2E9DC8" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
+
+const EmptyState = ({ title, sub }) => (
+  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '80px 24px', textAlign: 'center' }}>
+    <PeopleIcon />
+    <div style={{ fontWeight: 700, fontSize: 18, color: '#0A2F5C', marginBottom: 8, letterSpacing: '-0.01em' }}>{title}</div>
+    <div style={{ fontSize: 14, color: '#9ca3af', maxWidth: 320, lineHeight: 1.6 }}>{sub}</div>
+  </div>
+);
+
 const s = {
-  wrap: { maxWidth: 860, margin: '0 auto', padding: '40px 24px' },
-  h1: { fontSize: 28, fontWeight: 800, color: '#0A2F5C', marginBottom: 24, letterSpacing: '-0.02em' },
-  card: { background: '#fff', borderRadius: 14, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(10,47,92,0.06)', marginBottom: 16, border: '1px solid #f3f4f6' },
+  page: { background: '#ffffff', minHeight: '100vh', paddingTop: 60 },
+  wrap: { maxWidth: 800, margin: '0 auto', padding: '40px 48px' },
+  h1: { fontFamily: "'Fraunces', Georgia, serif", fontSize: 36, fontWeight: 900, color: '#0A2F5C', marginBottom: 24, letterSpacing: '-0.02em' },
+  card: {
+    background: '#fff',
+    borderRadius: 6,
+    padding: 24,
+    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+    marginBottom: 16,
+    border: '1px solid #f0f0f0',
+  },
   name: { fontWeight: 700, fontSize: 16, color: '#0A2F5C', letterSpacing: '-0.01em' },
   meta: { fontSize: 13, color: '#6b7280', marginTop: 4 },
   itinBtn:        { background: '#1A6FA8', color: '#fff', fontSize: 13, fontWeight: 600, padding: '8px 18px', borderRadius: 7, border: 'none', cursor: 'pointer' },
   generatingBtn:  { background: '#1A6FA8', color: '#fff', fontSize: 13, fontWeight: 600, padding: '8px 18px', borderRadius: 7, border: 'none', cursor: 'not-allowed', animation: 'btn-pulse 1.4s ease-in-out infinite' },
-  acceptBtn:   { background: '#0d9488', color: '#fff', fontSize: 13, fontWeight: 600, padding: '8px 18px', borderRadius: 7, border: 'none', cursor: 'pointer' },
+  acceptBtn:   { background: '#0F4A80', color: '#fff', fontSize: 13, fontWeight: 600, padding: '8px 18px', borderRadius: 7, border: 'none', cursor: 'pointer' },
   confirmBtn:  { background: '#0F4A80', color: '#fff', fontSize: 13, fontWeight: 600, padding: '8px 18px', borderRadius: 7, border: 'none', cursor: 'pointer' },
-  completeBtn: { background: '#0d9488', color: '#fff', fontSize: 13, fontWeight: 600, padding: '8px 18px', borderRadius: 7, border: 'none', cursor: 'pointer' },
+  completeBtn: { background: '#0F4A80', color: '#fff', fontSize: 13, fontWeight: 600, padding: '8px 18px', borderRadius: 7, border: 'none', cursor: 'pointer' },
   disabledBtn:  { background: '#e5e7eb', color: '#9ca3af', fontSize: 13, fontWeight: 600, padding: '8px 18px', borderRadius: 7, border: 'none', cursor: 'not-allowed' },
   cancelBtn:   { background: 'transparent', color: '#6b7280', fontSize: 13, fontWeight: 500, padding: '8px 14px', borderRadius: 7, border: '1.5px solid #e5e7eb', cursor: 'pointer' },
   declineBtn:  { background: 'transparent', color: '#dc2626', fontSize: 13, fontWeight: 600, padding: '8px 16px', borderRadius: 7, border: '1.5px solid #fecaca', cursor: 'pointer' },
@@ -38,7 +65,7 @@ const s = {
   },
   cancelConfirm: {
     marginTop: 14, padding: '14px 16px', background: '#fef2f2',
-    borderRadius: 10, border: '1px solid #fecaca',
+    borderRadius: 6, border: '1px solid #fecaca',
   },
   cancelQuestion: { fontSize: 13, fontWeight: 600, color: '#991b1b', marginBottom: 10 },
   cancelConfirmRow: { display: 'flex', gap: 8 },
@@ -222,7 +249,6 @@ export default function MatchesPage() {
       );
     }
 
-    // pending — activity owner sees Accept + Decline
     if (isOwner) {
       return (
         <div>
@@ -243,7 +269,6 @@ export default function MatchesPage() {
       );
     }
 
-    // pending — initiator sees awaiting state + cancel option
     return (
       <div style={s.btnRow}>
         <button style={s.cancelBtn} onClick={() => setPendingCancel(matchId)}>Cancel request</button>
@@ -261,40 +286,46 @@ export default function MatchesPage() {
   };
 
   return (
-    <div style={s.wrap}>
+    <div style={s.page}>
       <style>{PULSE_KEYFRAMES}</style>
-      <h1 style={s.h1}>My Matches</h1>
-      {advanceError && <div style={s.errMsg}>{advanceError}</div>}
-      {myMatches.length === 0 && (
-        <div style={{ color: '#6b7280' }}>No matches yet. Browse activities and connect with travelers!</div>
-      )}
-      {myMatches.map((match) => {
-        const { isInitiator } = getRole(match);
-        const showAwaitingBadge = match.status === 'pending' && isInitiator;
-        return (
-          <div key={match._id} style={s.card}>
-            <div style={s.name}>{match.activity?.title}</div>
-            <div style={s.meta}>{match.activity?.city} · {match.activity && new Date(match.activity.date).toLocaleDateString()}</div>
-            <div style={s.meta}>With: {match.participants?.filter((p) => {
-              const myId = currentUser?._id || currentUser?.id;
-              return String(p._id) !== String(myId);
-            }).map((p) => p.name).join(', ')}</div>
-            {(() => {
-              const myId = currentUser?._id || currentUser?.id;
-              const other = match.participants?.find((p) => String(p._id) !== String(myId));
-              if (!other) return null;
-              return other.completedMeetups
-                ? <div style={s.trustSignal}>★ {(other.averageRating || 0).toFixed(1)} · {other.completedMeetups} meetup{other.completedMeetups !== 1 ? 's' : ''}</div>
-                : <div style={s.trustSignal}>New traveler</div>;
-            })()}
-            {showAwaitingBadge
-              ? <div style={s.awaitingBadge}>Awaiting response...</div>
-              : <div style={s.statusBadge(match.status)}>{match.status}</div>
-            }
-            {renderMatchButtons(match)}
-          </div>
-        );
-      })}
+      <div style={s.wrap}>
+        <h1 style={s.h1}>My Matches</h1>
+        {advanceError && <div style={s.errMsg}>{advanceError}</div>}
+        {myMatches.length === 0 ? (
+          <EmptyState
+            title="No matches yet"
+            sub="Browse activities and connect with someone. Your next travel companion is out there!"
+          />
+        ) : (
+          myMatches.map((match) => {
+            const { isInitiator } = getRole(match);
+            const showAwaitingBadge = match.status === 'pending' && isInitiator;
+            return (
+              <div key={match._id} style={s.card}>
+                <div style={s.name}>{match.activity?.title}</div>
+                <div style={s.meta}>{match.activity?.city} · {match.activity && new Date(match.activity.date).toLocaleDateString()}</div>
+                <div style={s.meta}>With: {match.participants?.filter((p) => {
+                  const myId = currentUser?._id || currentUser?.id;
+                  return String(p._id) !== String(myId);
+                }).map((p) => p.name).join(', ')}</div>
+                {(() => {
+                  const myId = currentUser?._id || currentUser?.id;
+                  const other = match.participants?.find((p) => String(p._id) !== String(myId));
+                  if (!other) return null;
+                  return other.completedMeetups
+                    ? <div style={s.trustSignal}>★ {(other.averageRating || 0).toFixed(1)} · {other.completedMeetups} meetup{other.completedMeetups !== 1 ? 's' : ''}</div>
+                    : <div style={s.trustSignal}>New traveler</div>;
+                })()}
+                {showAwaitingBadge
+                  ? <div style={s.awaitingBadge}>Awaiting response...</div>
+                  : <div style={s.statusBadge(match.status)}>{match.status}</div>
+                }
+                {renderMatchButtons(match)}
+              </div>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }

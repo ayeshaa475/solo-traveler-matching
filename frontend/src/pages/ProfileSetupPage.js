@@ -21,32 +21,32 @@ const CATEGORIES = [
   },
   {
     label: 'Sports',
-    tags: ['Running', 'Yoga', 'Surfing', 'Basketball', 'Tennis', 'Martial Arts'],
+    tags: ['Running', 'Yoga', 'Surfing', 'Basketball', 'Tennis'],
   },
 ];
 
 const s = {
-  page: { background: '#E8F5E3', minHeight: '100vh', padding: '60px 24px' },
-  wrap: { maxWidth: 620, margin: '0 auto' },
-  h1: { fontSize: 28, fontWeight: 800, color: '#0A2F5C', marginBottom: 8, letterSpacing: '-0.02em' },
-  sub: { fontSize: 15, color: '#6b7280', marginBottom: 40, lineHeight: 1.6 },
-  category: { marginBottom: 32 },
-  categoryLabel: { fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#1A6FA8', marginBottom: 12 },
-  tags: { display: 'flex', flexWrap: 'wrap', gap: 8 },
+  page: { background: '#ffffff', minHeight: '100vh', padding: '120px 48px 80px' },
+  wrap: { maxWidth: 700, margin: '0 auto' },
+  h1: { fontSize: 36, fontWeight: 800, color: '#0A2F5C', marginBottom: 10, letterSpacing: '-0.02em', fontFamily: 'Fraunces, serif' },
+  sub: { fontSize: 15, color: '#6b7280', marginBottom: 32, lineHeight: 1.6 },
+  category: { marginBottom: 40 },
+  categoryLabel: { fontSize: 13, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#0A2F5C', marginBottom: 14 },
+  tags: { display: 'flex', flexWrap: 'wrap', gap: 10 },
   tag: (selected) => ({
-    padding: '8px 16px',
-    borderRadius: 100,
+    padding: '10px 18px',
+    borderRadius: 6,
     fontSize: 14,
     fontWeight: 500,
     cursor: 'pointer',
-    border: `1.5px solid ${selected ? '#0F4A80' : '#A8D5C2'}`,
-    background: selected ? '#0F4A80' : '#fff',
-    color: selected ? '#fff' : '#0A2F5C',
-    transition: 'all 0.15s',
+    border: `1px solid #0A2F5C`,
+    background: selected ? '#0A2F5C' : '#ffffff',
+    color: selected ? '#ffffff' : '#0A2F5C',
+    transition: 'all 0.12s',
   }),
-  footer: { marginTop: 40, display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
+  footer: { marginTop: 48, display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
   count: { fontSize: 13, color: '#6b7280' },
-  btn: { background: '#0F4A80', color: '#fff', padding: '12px 32px', fontSize: 15, fontWeight: 600, borderRadius: 8, border: 'none', cursor: 'pointer' },
+  btn: { background: '#0A2F5C', color: '#fff', padding: '12px 32px', fontSize: 15, fontWeight: 600, borderRadius: 8, border: 'none', cursor: 'pointer' },
   skip: { background: 'none', border: 'none', color: '#6b7280', fontSize: 14, cursor: 'pointer', textDecoration: 'underline', padding: 0 },
 };
 
@@ -72,7 +72,7 @@ export default function ProfileSetupPage() {
   return (
     <div style={s.page}>
       <div style={s.wrap}>
-        <h1 style={s.h1}>What are you into?</h1>
+        <h1 style={s.h1}>What are your interests?</h1>
         <p style={s.sub}>Pick as many as you like. We'll use these to match you with travelers who share your interests.</p>
 
         {CATEGORIES.map((cat) => (

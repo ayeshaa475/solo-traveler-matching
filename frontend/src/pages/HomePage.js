@@ -2,139 +2,41 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const PALETTE = {
-  mint:     '#E8F5E3',
-  sage:     '#A8D5C2',
-  teal:     '#2E9DC8',
-  deepBlue: '#0F4A80',
-  navy:     '#0A2F5C',
-};
+const BOKEH_KEYFRAMES = `
+  @keyframes bokeh-drift-1 {
+    0%   { transform: translate(0, 0) scale(1); }
+    33%  { transform: translate(40px, -30px) scale(1.06); }
+    66%  { transform: translate(-20px, 35px) scale(0.96); }
+    100% { transform: translate(0, 0) scale(1); }
+  }
+  @keyframes bokeh-drift-2 {
+    0%   { transform: translate(0, 0) scale(1); }
+    50%  { transform: translate(-35px, 42px) scale(1.1); }
+    100% { transform: translate(0, 0) scale(1); }
+  }
+  @keyframes bokeh-drift-3 {
+    0%   { transform: translate(0, 0) scale(1); }
+    40%  { transform: translate(28px, -38px) scale(0.93); }
+    80%  { transform: translate(-12px, 22px) scale(1.04); }
+    100% { transform: translate(0, 0) scale(1); }
+  }
+`;
 
-const s = {
-  page: { background: '#ffffff', minHeight: '100vh' },
+const NAVY = '#0A2F5C';
 
-  hero: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    textAlign: 'center',
-    padding: '140px 24px 120px',
-    background: '#ffffff',
-  },
-  h1: {
-    fontSize: 76,
-    fontWeight: 800,
-    color: PALETTE.navy,
-    marginBottom: 28,
-    lineHeight: 1.05,
-    letterSpacing: '-0.03em',
-  },
-  sub: {
-    fontSize: 22,
-    color: '#374151',
-    lineHeight: 1.7,
-    maxWidth: 600,
-    marginBottom: 52,
-    fontWeight: 500,
-    textAlign: 'center',
-    margin: '0 auto 52px',
-  },
-  btnGroup: { display: 'flex', gap: 14, justifyContent: 'center' },
-  primary: {
-    background: PALETTE.deepBlue,
-    color: '#fff',
-    padding: '16px 40px',
-    fontSize: 16,
-    fontWeight: 600,
-    borderRadius: 10,
-    border: 'none',
-    cursor: 'pointer',
-    letterSpacing: '-0.01em',
-  },
-  secondary: {
-    background: 'transparent',
-    color: '#6b7280',
-    padding: '16px 40px',
-    fontSize: 16,
-    fontWeight: 500,
-    borderRadius: 10,
-    border: '1.5px solid #e5e7eb',
-    cursor: 'pointer',
-  },
-
-  gradientWrap: {
-    background: `linear-gradient(to bottom, #ffffff, ${PALETTE.mint} 20%, ${PALETTE.sage} 65%, ${PALETTE.teal} 100%)`,
-  },
-
-  step: { padding: '120px 0' },
-  stepInner: {
-    maxWidth: 1100,
-    margin: '0 auto',
-    padding: '0 64px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 80,
-  },
-  stepLeft: { flex: '0 0 auto' },
-  stepNum: {
-    fontSize: 12,
-    fontWeight: 700,
-    letterSpacing: '0.12em',
-    textTransform: 'uppercase',
-    color: PALETTE.navy,
-    opacity: 0.5,
-    marginBottom: 20,
-  },
-  stepTitle: {
-    fontSize: 56,
-    fontWeight: 800,
-    color: PALETTE.navy,
-    letterSpacing: '-0.03em',
-    lineHeight: 1.05,
-    maxWidth: 420,
-  },
-  stepRight: { flex: '0 0 400px' },
-  stepDesc: {
-    fontSize: 20,
-    color: PALETTE.navy,
-    lineHeight: 1.8,
-    fontWeight: 400,
-    opacity: 0.75,
-  },
-
-  bottomCta: {
-    textAlign: 'center',
-    padding: '140px 24px',
-    background: `linear-gradient(to bottom, ${PALETTE.teal} 0%, #c8e8f5 30%, #ddf2f9 55%, #eef9fc 75%, #ffffff 100%)`,
-  },
-  ctaHeadline: {
-    fontSize: 48,
-    fontWeight: 800,
-    color: PALETTE.navy,
-    letterSpacing: '-0.03em',
-    lineHeight: 1.1,
-    marginBottom: 48,
-  },
-  ctaBtn: {
-    background: PALETTE.deepBlue,
-    color: '#fff',
-    padding: '20px 56px',
-    fontSize: 18,
-    fontWeight: 600,
-    borderRadius: 12,
-    border: 'none',
-    cursor: 'pointer',
-    letterSpacing: '-0.01em',
-  },
-};
+const bokehCircles = [
+  { size: 440, top: '-8%',  left: '-10%', color: '#1A6FA8', opacity: 0.09, blur: 90,  anim: 'bokeh-drift-1 22s ease-in-out infinite' },
+  { size: 520, top: '38%',  right: '-12%', color: '#2E9DC8', opacity: 0.07, blur: 110, anim: 'bokeh-drift-2 28s ease-in-out infinite' },
+  { size: 340, top: '58%',  left: '8%',   color: '#dbeafe', opacity: 0.055, blur: 80, anim: 'bokeh-drift-3 19s ease-in-out infinite' },
+  { size: 260, top: '4%',   right: '14%', color: '#2E9DC8', opacity: 0.07, blur: 70,  anim: 'bokeh-drift-1 25s ease-in-out infinite reverse' },
+  { size: 190, top: '72%',  right: '22%', color: '#bfdbfe', opacity: 0.07, blur: 55,  anim: 'bokeh-drift-2 20s ease-in-out infinite reverse' },
+];
 
 const steps = [
   {
     num: '01',
     title: 'Post an Activity',
-    desc: 'Share what you want to do, whether it\'s a hike, a food tour, or visiting a museum, and when you want to do it.',
+    desc: "Share what you want to do, whether it's a hike, a food tour, or a museum visit, and when you want to do it.",
   },
   {
     num: '02',
@@ -143,8 +45,8 @@ const steps = [
   },
   {
     num: '03',
-    title: 'AI Itinerary',
-    desc: 'Once matched, get a day plan with specific venues, times, and logistics generated for both of you.',
+    title: 'Get a day plan',
+    desc: 'Once matched, you both get a shared, customizable itinerary with specific venues, times, and logistics tailored to your interests.',
   },
   {
     num: '04',
@@ -153,49 +55,163 @@ const steps = [
   },
 ];
 
+const s = {
+  page: { background: '#ffffff' },
+
+  // ── Hero ──────────────────────────────────────────────────────────────────
+  hero: {
+    position: 'relative',
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    textAlign: 'center',
+    padding: '0 24px',
+    minHeight: '100vh',
+    background: NAVY,
+  },
+  heroContent: {
+    position: 'relative',
+    zIndex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
+  h1: {
+    fontFamily: "'Fraunces', Georgia, serif",
+    fontSize: 80,
+    fontWeight: 900,
+    color: '#ffffff',
+    marginBottom: 28,
+    lineHeight: 1.0,
+    letterSpacing: '-0.02em',
+  },
+  sub: {
+    fontFamily: "'Inter', sans-serif",
+    fontSize: 18,
+    color: 'rgba(255,255,255,0.68)',
+    lineHeight: 1.75,
+    maxWidth: 500,
+    fontWeight: 400,
+    textAlign: 'center',
+    margin: '0 auto 52px',
+  },
+  btnGroup: { display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' },
+  primaryBtn: {
+    background: '#ffffff',
+    color: '#0A2F5C',
+    padding: '16px 40px',
+    fontSize: 16,
+    fontWeight: 600,
+    borderRadius: 10,
+    border: 'none',
+    cursor: 'pointer',
+    letterSpacing: '-0.01em',
+  },
+  outlineBtn: {
+    background: 'transparent',
+    color: '#ffffff',
+    padding: '16px 40px',
+    fontSize: 16,
+    fontWeight: 500,
+    borderRadius: 10,
+    border: '1.5px solid rgba(255,255,255,0.75)',
+    cursor: 'pointer',
+  },
+
+  // ── Steps ─────────────────────────────────────────────────────────────────
+  stepSection: () => ({
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: '#ffffff',
+    padding: '0 120px',
+  }),
+  stepLeft: {
+    flex: '0 0 40%',
+    paddingRight: 48,
+  },
+  stepRight: {
+    flex: '0 0 40%',
+    paddingLeft: 48,
+  },
+  stepTitle: {
+    fontFamily: "'Fraunces', Georgia, serif",
+    fontSize: 68,
+    fontWeight: 900,
+    color: NAVY,
+    lineHeight: 1.05,
+    letterSpacing: '-0.03em',
+  },
+  stepDesc: {
+    fontSize: 19,
+    color: NAVY,
+    lineHeight: 1.85,
+    fontWeight: 400,
+    opacity: 0.62,
+  },
+
+};
+
 export default function HomePage() {
   const { user } = useAuth();
 
   return (
     <div style={s.page}>
+      <style>{BOKEH_KEYFRAMES}</style>
+
+      {/* ── Dark navy hero ── */}
       <div style={s.hero}>
-        <h1 style={s.h1}>Travel solo. Explore together.</h1>
-        <p style={s.sub}>
-          Post what you want to do. Get matched with a solo traveler in the same city, on the same day, with the same idea.
-        </p>
-        {!user && (
-          <div style={s.btnGroup}>
-            <Link to="/register"><button style={s.primary}>Get Started</button></Link>
-            <Link to="/login"><button style={s.secondary}>Sign In</button></Link>
-          </div>
-        )}
-        {user && (
-          <Link to="/activities"><button style={s.primary}>Browse Activities</button></Link>
-        )}
-      </div>
-
-      <div style={s.gradientWrap}>
-        {steps.map((step) => (
-          <div key={step.num} style={s.step}>
-            <div style={s.stepInner}>
-              <div style={s.stepLeft}>
-                <div style={s.stepNum}>Step {step.num}</div>
-                <div style={s.stepTitle}>{step.title}</div>
-              </div>
-              <div style={s.stepRight}>
-                <p style={s.stepDesc}>{step.desc}</p>
-              </div>
-            </div>
-          </div>
+        {bokehCircles.map((c, i) => (
+          <div
+            key={i}
+            style={{
+              position: 'absolute',
+              width: c.size,
+              height: c.size,
+              borderRadius: '50%',
+              background: c.color,
+              opacity: c.opacity,
+              filter: `blur(${c.blur}px)`,
+              animation: c.anim,
+              top: c.top,
+              left: c.left,
+              right: c.right,
+              pointerEvents: 'none',
+            }}
+          />
         ))}
+
+        <div style={s.heroContent}>
+          <h1 style={s.h1}>Travel solo.<br />Explore together.</h1>
+          <p style={s.sub}>
+            Connect with other travelers in the same city.
+          </p>
+          {!user ? (
+            <div style={s.btnGroup}>
+              <Link to="/activities"><button style={s.primaryBtn}>Browse Activities</button></Link>
+              <Link to="/register"><button style={s.outlineBtn}>Sign Up</button></Link>
+            </div>
+          ) : (
+            <Link to="/activities"><button style={s.primaryBtn}>Browse Activities</button></Link>
+          )}
+        </div>
       </div>
 
-      {!user && (
-        <div style={s.bottomCta}>
-          <div style={s.ctaHeadline}>Meet your next travel companion!</div>
-          <Link to="/register"><button style={s.ctaBtn}>Get Started</button></Link>
+      {/* ── How It Works ── */}
+      {steps.map((step) => (
+        <div key={step.num} style={s.stepSection()}>
+          <div style={s.stepLeft}>
+            <h2 style={s.stepTitle}>{step.title}</h2>
+          </div>
+          <div style={s.stepRight}>
+            <p style={s.stepDesc}>{step.desc}</p>
+          </div>
         </div>
-      )}
+      ))}
+
     </div>
   );
 }
