@@ -1,7 +1,7 @@
 # Detour
 Problem: Solo travelers often want company for a specific activity but have no good way to find it. Existing options like travel forums, hostel bulletin boards, and social media are too broad, not activity-focused, or require significant independent planning. Detour addresses this by matching people on what they actually want to do and reducing the stress of planning.
 
-Detour is an app for solo travelers to find a travel buddy for the day. Post what you want to do and browse activites that others are interested in doing, get matched with another solo traveler in the same city, and get a shared itinerary that is generated with real venues tailored to both of you. After the meetup, ratings build a reputation score that improves future matches.
+Detour is an app for solo travelers to find a travel buddy for the day. Post what you want to do and browse activites that others are interested in doing, then connect with other solo travelers in the same city, and get a shared itinerary that is generated with real venues tailored to both of you. After the meetup, ratings build a reputation score that improves future matches.
 
 ---
 
