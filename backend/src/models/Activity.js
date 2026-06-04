@@ -11,8 +11,9 @@ const activitySchema = new mongoose.Schema({
   },
   city: { type: String, required: true },
   date: { type: Date, required: true },
-  venueName:    { type: String },
-  venueAddress: { type: String },
+  venueName:      { type: String },
+  venueAddress:   { type: String },
+  photoReference: { type: String },
   location: {
     lat: { type: Number },
     lng: { type: Number },

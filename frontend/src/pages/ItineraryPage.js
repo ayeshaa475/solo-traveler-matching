@@ -4,6 +4,15 @@ import { io } from 'socket.io-client';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
+const to12Hour = (time) => {
+  if (!time) return time;
+  const [h, m] = time.split(':').map(Number);
+  if (isNaN(h) || isNaN(m)) return time;
+  const period = h < 12 ? 'AM' : 'PM';
+  const hour = h % 12 || 12;
+  return `${hour}:${String(m).padStart(2, '0')} ${period}`;
+};
+
 const SOCKET_URL = process.env.NODE_ENV === 'production'
   ? 'http://192.34.57.254:5001'
   : 'http://localhost:5001';
@@ -201,7 +210,7 @@ export default function ItineraryPage() {
 
   const renderStopContent = (stop, accentStyle) => (
     <div style={accentStyle}>
-      {stop.time && <div style={s.time}>{stop.time}</div>}
+      {stop.time && <div style={s.time}>{to12Hour(stop.time)}</div>}
       {stop.place && <div style={s.place}>📍 {stop.place}</div>}
       {stop.description && <div style={s.desc}>{stop.description}</div>}
       {stop.duration && <div style={s.duration}>Duration: {stop.duration}</div>}
@@ -270,7 +279,7 @@ export default function ItineraryPage() {
       <div key={i} style={s.stop}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
           <div style={{ ...s.stopInner, flex: 1 }}>
-            {stop.time && <div style={s.time}>{stop.time}</div>}
+            {stop.time && <div style={s.time}>{to12Hour(stop.time)}</div>}
             {stop.place && <div style={s.place}>📍 {stop.place}</div>}
             {stop.description && <div style={s.desc}>{stop.description}</div>}
             {stop.duration && <div style={s.duration}>Duration: {stop.duration}</div>}

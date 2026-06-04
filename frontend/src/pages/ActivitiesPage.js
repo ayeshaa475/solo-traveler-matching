@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -17,18 +17,21 @@ const s = {
   card: (hovered) => ({
     background: '#fff',
     borderRadius: 6,
-    padding: 24,
+    overflow: 'hidden',
     boxShadow: hovered ? '0 4px 16px rgba(0,0,0,0.09)' : '0 1px 4px rgba(0,0,0,0.06)',
     border: '1px solid #f0f0f0',
     transition: 'box-shadow 0.18s',
     display: 'flex',
     flexDirection: 'column',
   }),
-  categoryLabel: { fontSize: 11, fontWeight: 700, color: '#0A2F5C', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10, opacity: 0.45 },
-  cardTitle: { fontWeight: 700, marginBottom: 8, fontSize: 16, color: '#0A2F5C', letterSpacing: '-0.01em', lineHeight: 1.3 },
-  meta: { fontSize: 13, color: '#6b7280', marginBottom: 3, lineHeight: 1.5 },
-  trustSignal: { fontSize: 12, color: '#9ca3af', marginTop: 2 },
-  desc: { fontSize: 14, color: '#9ca3af', lineHeight: 1.6, marginTop: 10, flexGrow: 1, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' },
+  cardPhoto: { width: '100%', height: 160, objectFit: 'cover', display: 'block' },
+  cardPhotoPlaceholder: { width: '100%', height: 160, background: 'linear-gradient(135deg, #0A2F5C 0%, #1a4a7c 60%, #0d3b6e 100%)' },
+  cardContent: { padding: 24, display: 'flex', flexDirection: 'column', flexGrow: 1 },
+  categoryLabel: { fontSize: 11, fontWeight: 700, color: '#1a3a5c', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 },
+  cardTitle: { fontWeight: 700, marginBottom: 8, fontSize: 16, color: '#1a1a2e', letterSpacing: '-0.01em', lineHeight: 1.3 },
+  meta: { fontSize: 13, color: '#4a4a4a', marginBottom: 3, lineHeight: 1.5 },
+  trustSignal: { fontSize: 12, color: '#4a4a4a', marginTop: 2 },
+  desc: { fontSize: 14, color: '#555555', lineHeight: 1.6, marginTop: 10, flexGrow: 1, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' },
   cardBottom: { display: 'flex', justifyContent: 'flex-start', marginTop: 16 },
   matchBtn: { background: '#0A2F5C', color: '#fff', fontSize: 13, fontWeight: 600, padding: '8px 20px', borderRadius: 7, border: 'none', cursor: 'pointer' },
   modalBackdrop: {
@@ -78,6 +81,66 @@ const NYC = { lat: 40.7128, lng: -74.0060 };
 
 const CATEGORIES = ['hiking', 'food', 'nightlife', 'culture', 'adventure', 'relaxation', 'other'];
 
+const CATEGORY_IMAGES = {
+  hiking: [
+    'https://images.unsplash.com/photo-1551632811-561732d1e306?w=600&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=600&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=600&h=300&fit=crop',
+  ],
+  culture: [
+    'https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=600&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1580060839134-75a5edca2e99?w=600&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1555636222-cae831e670b3?w=600&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1532003885409-ed84d334f6cc?w=600&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1561839561-b13a1891ee17?w=600&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=600&h=300&fit=crop',
+  ],
+  food: [
+    'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1498654896293-37aaa4f6a069?w=600&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&h=300&fit=crop',
+  ],
+  relaxation: [
+    'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=600&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1476611338391-6f395a0dd82e?w=600&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1519331379826-f10be5486c6f?w=600&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1439088007595-7d0c28a8a455?w=600&h=300&fit=crop',
+  ],
+  nightlife: [
+    'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=600&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=600&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1571406252241-db0280bd36cd?w=600&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1543353071-087092ec393a?w=600&h=300&fit=crop',
+  ],
+  adventure: [
+    'https://images.unsplash.com/photo-1519583272095-6433daf26b6e?w=600&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=600&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1530521954074-e64f6810b32d?w=600&h=300&fit=crop',
+  ],
+  other: [
+    'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1530521954074-e64f6810b32d?w=600&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=600&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1452421822248-d4c2b47f0c81?w=600&h=300&fit=crop',
+    'https://images.unsplash.com/photo-1507608616759-54f48f0af0ee?w=600&h=300&fit=crop',
+  ],
+};
+CATEGORY_IMAGES.default = CATEGORY_IMAGES.other;
+
+const hashIndex = (str) => {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+  return h;
+};
+
 const CATEGORY_MAP = {
   hiking: 'hiking', food: 'food', music: 'nightlife', museums: 'culture',
   photography: 'culture', cycling: 'adventure', yoga: 'relaxation',
@@ -94,11 +157,12 @@ const toDateInput = (dateStr) => {
 
 export default function ActivitiesPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user: currentUser } = useAuth();
   const [activities, setActivities] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [filters, setFilters] = useState({ city: '', category: '' });
-  const [form, setForm] = useState({ title: '', description: '', category: 'other', city: '', date: '', maxParticipants: 2, venueName: '', venueAddress: '' });
+  const [form, setForm] = useState({ title: '', description: '', category: 'other', city: '', date: '', maxParticipants: 2, venueName: '', venueAddress: '', photoReference: '' });
   const [intentText, setIntentText] = useState('');
   const [suggesting, setSuggesting] = useState(false);
   const [venues, setVenues] = useState([]);
@@ -109,6 +173,14 @@ export default function ActivitiesPage() {
   const [browseLocation, setBrowseLocation] = useState(NYC);
   const [usingRealLocation, setUsingRealLocation] = useState(false);
   const [hoveredCard, setHoveredCard] = useState(null);
+  const [imgErrors, setImgErrors] = useState({});
+
+  useEffect(() => {
+    if (location.state?.openForm) {
+      setShowForm(true);
+      window.history.replaceState({}, '');
+    }
+  }, []);
 
   useEffect(() => {
     if (!navigator.geolocation) return;
@@ -179,9 +251,8 @@ export default function ActivitiesPage() {
   };
 
   const handleSelectVenue = (venue) => {
-    console.log('Selected venue location:', { lat: venue.lat, lng: venue.lng });
     setSelectedVenue(venue.place_id);
-    setForm((prev) => ({ ...prev, title: venue.name, venueName: venue.name, venueAddress: venue.address }));
+    setForm((prev) => ({ ...prev, title: venue.name, venueName: venue.name, venueAddress: venue.address, photoReference: venue.photoReference || '' }));
     if (venue.lat != null && venue.lng != null) {
       setLocationCoords({ lat: venue.lat, lng: venue.lng });
     }
@@ -193,7 +264,7 @@ export default function ActivitiesPage() {
     if (locationCoords) payload.location = locationCoords;
     await api.post('/activities', payload);
     setShowForm(false);
-    setForm({ title: '', description: '', category: 'other', city: '', date: '', maxParticipants: 2, venueName: '', venueAddress: '' });
+    setForm({ title: '', description: '', category: 'other', city: '', date: '', maxParticipants: 2, venueName: '', venueAddress: '', photoReference: '' });
     setLocationCoords(null);
     setIntentText('');
     setVenues([]);
@@ -308,6 +379,19 @@ export default function ActivitiesPage() {
         <div style={s.grid}>
           {activities.map((a) => {
             const isHovered = hoveredCard === a._id;
+            const catImgs = CATEGORY_IMAGES[a.category] || CATEGORY_IMAGES.default;
+            const fallbackSrc = catImgs[hashIndex(a._id) % catImgs.length];
+            const placesUrl = a.photoReference
+              ? `${api.defaults.baseURL}/activities/photo/${a.photoReference}`
+              : null;
+            const errorStage = imgErrors[a._id]; // undefined | 'places' | 'all'
+            const imgSrc = errorStage === 'places' ? fallbackSrc
+              : errorStage === 'all' ? null
+              : (placesUrl || fallbackSrc);
+            const handleImgError = () => setImgErrors((prev) => ({
+              ...prev,
+              [a._id]: (!prev[a._id] && placesUrl) ? 'places' : 'all',
+            }));
             return (
               <div
                 key={a._id}
@@ -315,30 +399,36 @@ export default function ActivitiesPage() {
                 onMouseEnter={() => setHoveredCard(a._id)}
                 onMouseLeave={() => setHoveredCard(null)}
               >
-                <div style={s.categoryLabel}>{a.category}</div>
-                <div style={s.cardTitle}>{a.title}</div>
-                <div style={s.meta}>{a.city} · {new Date(a.date).toLocaleDateString()}</div>
-                <div style={s.meta}>By {a.user?.name}</div>
-                {a.user && (
-                  a.user.completedMeetups
-                    ? <div style={s.trustSignal}>★ {(a.user.averageRating || 0).toFixed(1)} · {a.user.completedMeetups} meetup{a.user.completedMeetups !== 1 ? 's' : ''}</div>
-                    : <div style={s.trustSignal}>New traveler</div>
-                )}
-                {a.description && <div style={s.desc}>{a.description}</div>}
-                <div style={s.cardBottom}>
-                  <button
-                    style={s.matchBtn}
-                    onClick={async () => {
-                      try {
-                        await api.post('/matches', { activityId: a._id, targetUserId: a.user._id });
-                        navigate('/matches');
-                      } catch (err) {
-                        console.error('Connect failed:', err.response?.data || err.message);
-                      }
-                    }}
-                  >
-                    Connect
-                  </button>
+                {imgSrc
+                  ? <img src={imgSrc} style={s.cardPhoto} alt={a.category} onError={handleImgError} />
+                  : <div style={s.cardPhotoPlaceholder} />
+                }
+                <div style={s.cardContent}>
+                  <div style={s.categoryLabel}>{a.category}</div>
+                  <div style={s.cardTitle}>{a.title}</div>
+                  <div style={s.meta}>{a.city} · {new Date(a.date).toLocaleDateString()}</div>
+                  <div style={s.meta}>By {a.user?.name}</div>
+                  {a.user && (
+                    a.user.completedMeetups
+                      ? <div style={s.trustSignal}>★ {(a.user.averageRating || 0).toFixed(1)} · {a.user.completedMeetups} meetup{a.user.completedMeetups !== 1 ? 's' : ''}</div>
+                      : <div style={s.trustSignal}>New traveler</div>
+                  )}
+                  {a.description && <div style={s.desc}>{a.description}</div>}
+                  <div style={s.cardBottom}>
+                    <button
+                      style={s.matchBtn}
+                      onClick={async () => {
+                        try {
+                          await api.post('/matches', { activityId: a._id, targetUserId: a.user._id });
+                          navigate('/matches');
+                        } catch (err) {
+                          console.error('Connect failed:', err.response?.data || err.message);
+                        }
+                      }}
+                    >
+                      Connect
+                    </button>
+                  </div>
                 </div>
               </div>
             );

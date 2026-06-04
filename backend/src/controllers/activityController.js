@@ -14,6 +14,24 @@ exports.parseActivity = async (req, res) => {
 };
 
 
+// Validates a photo_reference by following the Places Photo redirect.
+// Returns null if the redirect destination is a staticmap (synthetic Google map image).
+const validatePhotoRef = async (photoRef, apiKey) => {
+  if (!photoRef) return null;
+  try {
+    const url = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=1&photo_reference=${photoRef}&key=${apiKey}`;
+    const res = await fetch(url); // follows redirects by default
+    await res.body?.cancel();     // discard body — we only need the final URL
+    const finalUrl = res.url || '';
+    const isStaticMap = finalUrl.includes('staticmap') || finalUrl.includes('/maps/api/static');
+    console.log(`[validatePhotoRef] ${isStaticMap ? 'REJECTED (staticmap)' : 'OK'}: ${finalUrl.substring(0, 80)}`);
+    return isStaticMap ? null : photoRef;
+  } catch (err) {
+    console.warn('[validatePhotoRef] check failed, keeping ref:', err.message);
+    return photoRef;
+  }
+};
+
 exports.suggestActivity = async (req, res) => {
   try {
     const { text, city: bodyCity } = req.body;
@@ -48,12 +66,17 @@ exports.suggestActivity = async (req, res) => {
       [results[i], results[j]] = [results[j], results[i]];
     }
 
-    const venues = results.slice(0, 3).map((place) => ({
-      name: place.name,
-      address: place.formatted_address,
-      place_id: place.place_id,
-      lat: place.geometry?.location?.lat ?? null,
-      lng: place.geometry?.location?.lng ?? null,
+    const venues = await Promise.all(results.slice(0, 3).map(async (place) => {
+      const rawRef = place.photos?.[0]?.photo_reference ?? null;
+      const photoReference = await validatePhotoRef(rawRef, apiKey);
+      return {
+        name: place.name,
+        address: place.formatted_address,
+        place_id: place.place_id,
+        lat: place.geometry?.location?.lat ?? null,
+        lng: place.geometry?.location?.lng ?? null,
+        photoReference,
+      };
     }));
 
     res.json({ parsed, venues, activityLabel: parsed.description });
@@ -65,8 +88,9 @@ exports.suggestActivity = async (req, res) => {
 
 exports.createActivity = async (req, res) => {
   try {
-    console.log('[createActivity] body:', req.body);
+    console.log('[createActivity] photoReference from body:', req.body.photoReference);
     const activity = await Activity.create({ ...req.body, user: req.user.id });
+    console.log('[createActivity] saved photoReference:', activity.photoReference);
     res.status(201).json(activity);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -130,6 +154,23 @@ exports.getActivities = async (req, res) => {
     res.json(activities);
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+};
+
+exports.proxyPhoto = async (req, res) => {
+  try {
+    const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+    if (!apiKey) return res.status(500).end();
+
+    const url = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${req.params.photoReference}&key=${apiKey}`;
+    const googleRes = await fetch(url); // follows the 302 redirect to lh3.googleusercontent.com
+    if (!googleRes.ok) return res.status(502).end();
+
+    res.set('Content-Type', googleRes.headers.get('content-type') || 'image/jpeg');
+    res.set('Cache-Control', 'public, max-age=86400');
+    res.send(Buffer.from(await googleRes.arrayBuffer()));
+  } catch {
+    res.status(500).end();
   }
 };
 

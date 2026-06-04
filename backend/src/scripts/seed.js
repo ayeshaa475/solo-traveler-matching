@@ -200,6 +200,48 @@ const buildActivities = (users) => [
   },
 ];
 
+// Maps each activity title to the best Google Places text search query for that venue.
+const PHOTO_QUERIES = {
+  'Photography walk through DUMBO':             'DUMBO Brooklyn New York',
+  'Morning run along the Hudson River Greenway': 'Hudson River Greenway New York City',
+  'Street food tour through Jackson Heights':    'Jackson Heights Queens New York',
+  'Greenwich Village local history walk':        'Stonewall Inn Greenwich Village New York',
+  'Jazz night at Smalls Jazz Club':              'Smalls Jazz Club West Village New York',
+  'Cycling to Governors Island':                 'Governors Island New York',
+  'Chelsea gallery hop':                         'David Zwirner Gallery Chelsea New York',
+  'Concert at Brooklyn Steel':                   'Brooklyn Steel Williamsburg New York',
+  'Museum of Natural History visit':             'American Museum of Natural History New York',
+  'Sunrise yoga in Central Park':                'Central Park Great Lawn New York',
+  'Coffee crawl in Williamsburg':                'Devocion Coffee Williamsburg Brooklyn',
+  'Brooklyn Bridge and Dumbo photo walk':        'Brooklyn Bridge New York',
+  'Chinatown food tour':                         'Chinatown Manhattan New York Canal Street',
+  'Prospect Park loop and picnic':               'Prospect Park Brooklyn New York',
+  'Vintage record shopping in the East Village': 'Academy Records Annex East Village New York',
+};
+
+const fetchPhotoRef = async (query, apiKey) => {
+  try {
+    const searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${apiKey}`;
+    const searchRes = await fetch(searchUrl);
+    const searchData = await searchRes.json();
+    if (searchData.status !== 'OK' || !searchData.results?.length) return null;
+
+    const photoRef = searchData.results[0]?.photos?.[0]?.photo_reference ?? null;
+    if (!photoRef) return null;
+
+    // Validate: skip if the photo redirects to a static map image.
+    const photoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=1&photo_reference=${photoRef}&key=${apiKey}`;
+    const photoRes = await fetch(photoUrl);
+    await photoRes.body?.cancel();
+    const finalUrl = photoRes.url || '';
+    if (finalUrl.includes('staticmap') || finalUrl.includes('/maps/api/static')) return null;
+
+    return photoRef;
+  } catch {
+    return null;
+  }
+};
+
 const seed = async () => {
   await mongoose.connect(process.env.MONGO_URI);
   console.log('Connected to MongoDB');
@@ -220,6 +262,27 @@ const seed = async () => {
 
   const activities = await Activity.insertMany(buildActivities(users));
   console.log(`Created ${activities.length} activities`);
+
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+  if (apiKey) {
+    console.log('\nFetching venue photos from Google Places...');
+    let photoCount = 0;
+    await Promise.all(activities.map(async (activity) => {
+      const query = PHOTO_QUERIES[activity.title];
+      if (!query) return;
+      const ref = await fetchPhotoRef(query, apiKey);
+      if (ref) {
+        await Activity.updateOne({ _id: activity._id }, { $set: { photoReference: ref } });
+        console.log(`  ✓ ${activity.title}`);
+        photoCount++;
+      } else {
+        console.log(`  – ${activity.title} (no photo)`);
+      }
+    }));
+    console.log(`\nPhotos fetched: ${photoCount}/${activities.length}`);
+  } else {
+    console.log('\nGOOGLE_PLACES_API_KEY not set — skipping photo fetch');
+  }
 
   console.log('\nSeed complete. Test credentials: any email above / password123');
   await mongoose.disconnect();
