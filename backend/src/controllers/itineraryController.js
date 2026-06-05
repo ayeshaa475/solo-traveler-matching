@@ -81,7 +81,7 @@ exports.proposeRevision = async (req, res) => {
       path: 'match',
       populate: [
         { path: 'participants', select: 'name' },
-        { path: 'activity', select: 'city category' },
+        { path: 'activity', select: 'city category location' },
       ],
     });
 
@@ -98,8 +98,9 @@ exports.proposeRevision = async (req, res) => {
     const travelerNames = match.participants.map((p) => p.name).join(' and ');
     const city = match.activity?.city || '';
     const category = match.activity?.category || '';
+    const location = match.activity?.location || {};
 
-    const proposedStop = await refineStop(originalStop, edit_request, { travelerNames, city, category });
+    const proposedStop = await refineStop(originalStop, edit_request, { travelerNames, city, category, location });
 
     itinerary.pendingRevision = {
       stop_index,
@@ -118,6 +119,9 @@ exports.proposeRevision = async (req, res) => {
 
     res.json(updated);
   } catch (err) {
+    if (err.code === 'NO_NEARBY_VENUE') {
+      return res.status(422).json({ message: err.message });
+    }
     console.error('[itineraryController] proposeRevision error:', err.message);
     res.status(500).json({ message: err.message });
   }
